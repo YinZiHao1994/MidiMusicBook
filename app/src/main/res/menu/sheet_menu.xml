@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/choose_song"
+          android:icon="@android:drawable/ic_menu_search"
+          android:title="choose" />
+    <item android:id="@+id/song_settings"
+          android:icon="@android:drawable/ic_menu_preferences"
+          android:title="setting" />
+    <item android:id="@+id/save_images"
+          android:icon="@android:drawable/ic_menu_save"
+          android:title="saveAsImage" />
+    <item android:id="@+id/help"
+          android:icon="@android:drawable/ic_menu_help"
+          android:title="help" />
+</menu>
+
