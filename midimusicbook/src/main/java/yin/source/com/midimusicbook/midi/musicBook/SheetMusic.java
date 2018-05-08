@@ -23,7 +23,6 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.View;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -1414,7 +1413,7 @@ public class SheetMusic extends SurfaceView implements SurfaceHolder.Callback, S
         switch (action) {
             case MotionEvent.ACTION_DOWN:
                 // If we touch while music is playing, stop the midi player 
-                if (player != null && player.getVisibility() == View.GONE) {
+                if (player != null) {
                     player.Pause();
                     scrollAnimation.stopMotion();
                 }

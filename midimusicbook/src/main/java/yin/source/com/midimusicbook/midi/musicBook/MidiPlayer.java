@@ -13,20 +13,11 @@
 package yin.source.com.midimusicbook.midi.musicBook;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.graphics.Point;
 import android.media.MediaPlayer;
 import android.os.Handler;
 import android.os.SystemClock;
-import android.support.annotation.Nullable;
-import android.util.AttributeSet;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.SeekBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.FileInputStream;
@@ -35,7 +26,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import yin.source.com.midimusicbook.R;
 import yin.source.com.midimusicbook.exception.MidiFileException;
 import yin.source.com.midimusicbook.midi.baseBean.MidiFile;
 import yin.source.com.midimusicbook.midi.baseBean.MidiOptions;
@@ -62,7 +52,7 @@ import yin.source.com.midimusicbook.midi.baseBean.MidiOptions;
  * SheetMusic.ShadeNotes() is used. It takes the current 'pulse time',
  * and determines which notes to shade.
  */
-public class MidiPlayer extends LinearLayout {
+public class MidiPlayer implements MidiPlayController {
     final int stopped = 1;
     /**
      * Currently stopped // 目前停止状态
@@ -131,35 +121,7 @@ public class MidiPlayer extends LinearLayout {
      * Time (in pulses) music was last at // 当前音乐的前一个节拍
      */
     Context context;
-    /**
-     * The settings image // 设置图片
-     */
 
-    private Button rewindButton;
-    /**
-     * The rewind button // 倒带按钮
-     */
-    private Button playButton;
-    /**
-     * The play/pause button // 播放暂停按钮
-     */
-    private Button stopButton;
-    /**
-     * The stop button // 停止按钮
-     */
-    private Button fastFwdButton;
-    /**
-     * The fast forward button // 快进按钮
-     */
-    private Button settingsButton;
-    /**
-     * The settings button // 设置按钮
-     */
-    private TextView speedText;
-    /**
-     * The "Speed %" label // 速度标签
-     */
-    private SeekBar speedBar;
     private List<MidiPlayerCallback> midiPlayerCallbackList;
     /**
      * If we're paused, reshade the sheet music and piano.
@@ -171,7 +133,7 @@ public class MidiPlayer extends LinearLayout {
                 if (midiPlayerCallbackList != null) {
                     for (MidiPlayerCallback midiPlayerCallback : midiPlayerCallbackList) {
                         midiPlayerCallback.onSheetNeedShadeNotes((int) currentPulseTime, -10, SheetMusic.ImmediateScroll);
-                        midiPlayerCallback.onPianoNeedShadeNotes((int) currentPulseTime, (int)prevPulseTime);
+                        midiPlayerCallback.onPianoNeedShadeNotes((int) currentPulseTime, (int) prevPulseTime);
 
                     }
                 }
@@ -302,34 +264,17 @@ public class MidiPlayer extends LinearLayout {
         }
     };
 
-    /**
-     * Create a new MidiPlayer, displaying the play/stop buttons, and the speed
-     * bar. The midifile and sheetmusic are initially null.
-     */
     public MidiPlayer(Context context) {
-        this(context, null);
-    }
-
-    public MidiPlayer(Context context, @Nullable AttributeSet attrs) {
-        this(context, attrs, 0);
-    }
-
-    public MidiPlayer(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        LayoutInflater.from(context).inflate(R.layout.midi_player_view, this);
         this.context = context;
-        this.midifile = null;
-        this.options = null;
         playstate = stopped;
         startTime = SystemClock.uptimeMillis();
         startPulseTime = 0;
         currentPulseTime = 0;
         prevPulseTime = -10;
-        this.setPadding(0, 0, 0, 0);
-        CreateButtons();
+
+        timer = new Handler();
 
         player = new MediaPlayer();
-        setBackgroundColor(Color.BLACK);
     }
 
     /**
@@ -344,163 +289,10 @@ public class MidiPlayer extends LinearLayout {
     }
 
     /**
-     * Determine the measured width and height. Resize the individual buttons
-     * according to the new width/height.
-     * 确定宽度和高度.根据新的高度和宽度重新计算独立的按钮的大小.
-     */
-    @Override
-    protected void onMeasure(int widthspec, int heightspec) {
-        super.onMeasure(widthspec, heightspec);
-        int screenwidth = MeasureSpec.getSize(widthspec);
-        int screenheight = MeasureSpec.getSize(heightspec);
-
-        /* Make the button height 2/3 the piano WhiteKeyHeight */
-        int width = screenwidth;
-        int height = (int) (5.0 * screenwidth / (2 + Piano.KeysPerOctave
-                * Piano.MaxOctave));
-        height = height * 2 / 3;
-        setMeasuredDimension(width, height);
-
-        Point newsize = MidiPlayer.getPreferredSize(screenwidth, screenheight);
-        resizeButtons(newsize.x, newsize.y);
-    }
-
-    /**
-     * When this view is resized, adjust the button sizes
-     * 当这个空间尺寸改变了,调整按钮的尺寸
-     */
-    @Override
-    protected void onSizeChanged(int newwidth, int newheight, int oldwidth,
-                                 int oldheight) {
-        resizeButtons(newwidth, newheight);
-        super.onSizeChanged(newwidth, newheight, oldwidth, oldheight);
-    }
-
-    /**
-     * Create the rewind, play, stop, and fast forward buttons
-     */
-    void CreateButtons() {
-
-        rewindButton = (Button) findViewById(R.id.btn_rewind);
-        stopButton = (Button) findViewById(R.id.btn_stop);
-        playButton = (Button) findViewById(R.id.btn_play);
-        fastFwdButton = (Button) findViewById(R.id.btn_fast_forward);
-        settingsButton = (Button) findViewById(R.id.btn_setting);
-        rewindButton = (Button) findViewById(R.id.btn_rewind);
-        speedBar = (SeekBar) findViewById(R.id.seek_speed);
-        speedText = (TextView) findViewById(R.id.tv_speed);
-
-
-        rewindButton.setOnClickListener(new OnClickListener() {
-            public void onClick(View v) {
-                Rewind();
-            }
-        });
-        stopButton.setOnClickListener(new OnClickListener() {
-            public void onClick(View v) {
-                Stop();
-            }
-        });
-        playButton.setOnClickListener(new OnClickListener() {
-            public void onClick(View v) {
-                Play();
-            }
-        });
-        fastFwdButton.setOnClickListener(new OnClickListener() {
-            public void onClick(View v) {
-                FastForward();
-            }
-        });
-        settingsButton.setOnClickListener(new OnClickListener() {
-            public void onClick(View v) {
-                if (midiPlayerCallbackList != null) {
-                    for (MidiPlayerCallback midiPlayerCallback : midiPlayerCallbackList) {
-                        midiPlayerCallback.onSettingMenuButtonClick();
-                    }
-                }
-            }
-        });
-        speedBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            public void onProgressChanged(SeekBar bar, int progress,
-                                          boolean fromUser) {
-                speedText.setText("Speed: " + String.format("%03d", progress) + "%");
-            }
-
-            public void onStartTrackingTouch(SeekBar bar) {
-            }
-
-            public void onStopTrackingTouch(SeekBar bar) {
-            }
-        });
-
-        /*
-         * Initialize the timer used for playback, but don't start the timer yet
-         * (enabled = false).
-         */
-        timer = new Handler();
-    }
-
-    void resizeButtons(int newwidth, int newheight) {
-        int buttonheight = newheight;
-        int pad = buttonheight / 6;
-        rewindButton.setPadding(pad, pad, pad, pad);
-        stopButton.setPadding(pad, pad, pad, pad);
-        playButton.setPadding(pad, pad, pad, pad);
-        fastFwdButton.setPadding(pad, pad, pad, pad);
-        settingsButton.setPadding(pad, pad, pad, pad);
-
-        LayoutParams params;
-
-        params = new LayoutParams(buttonheight, buttonheight);
-        params.width = buttonheight;
-        params.height = buttonheight;
-        params.bottomMargin = 0;
-        params.topMargin = 0;
-        params.rightMargin = 0;
-        params.leftMargin = buttonheight / 6;
-
-        rewindButton.setLayoutParams(params);
-
-        params = new LayoutParams(buttonheight, buttonheight);
-        params.bottomMargin = 0;
-        params.topMargin = 0;
-        params.rightMargin = 0;
-        params.leftMargin = 0;
-
-        playButton.setLayoutParams(params);
-        stopButton.setLayoutParams(params);
-        fastFwdButton.setLayoutParams(params);
-
-        params = (LayoutParams) speedText.getLayoutParams();
-        params.height = buttonheight;
-        speedText.setLayoutParams(params);
-
-        params = new LayoutParams(buttonheight * 5, buttonheight);
-        params.width = buttonheight * 5;
-        params.bottomMargin = 0;
-        params.leftMargin = 0;
-        params.topMargin = 0;
-        params.rightMargin = 0;
-        speedBar.setLayoutParams(params);
-        speedBar.setPadding(pad, pad, pad, pad);
-
-        params = new LayoutParams(buttonheight, buttonheight);
-        params.bottomMargin = 0;
-        params.topMargin = 0;
-        params.rightMargin = 0;
-        params.leftMargin = buttonheight / 8;
-        settingsButton.setLayoutParams(params);
-    }
-
-//    public void SetPiano(Piano p) {
-//        piano = p;
-//    }
-
-    /**
      * The MidiFile and/or SheetMusic has changed. Stop any playback sound, and
      * store the current midifile and sheet music.
      */
-    public void SetMidiFile(MidiFile file, MidiOptions opt, SheetMusic s) {
+    public void SetMidiFile(MidiFile file, MidiOptions opt) {
 
         /*
          * If we're paused, and using the same midi file, redraw the highlighted
@@ -552,7 +344,8 @@ public class MidiPlayer extends LinearLayout {
      */
     private void CreateMidiFile() {
         double inverse_tempo = 1.0 / midifile.getTime().getTempo();
-        double inverse_tempo_scaled = inverse_tempo * speedBar.getProgress() / 100.0;
+//        double inverse_tempo_scaled = inverse_tempo * speedBar.getProgress() / 100.0;
+        double inverse_tempo_scaled = inverse_tempo;
         // double inverse_tempo_scaled = inverse_tempo * 100.0 / 100.0;
         options.tempo = (int) (1.0 / inverse_tempo_scaled);
         pulsesPerMsec = midifile.getTime().getQuarter() * (1000.0 / options.tempo);
@@ -637,7 +430,7 @@ public class MidiPlayer extends LinearLayout {
      * The callback for the play button. If we're stopped or pause, then play
      * the midi file.
      */
-    private void Play() {
+    public void Play() {
         if (midifile == null || numberTracks() == 0) {
             return;
         } else if (playstate == initStop || playstate == initPause
@@ -648,7 +441,7 @@ public class MidiPlayer extends LinearLayout {
 
         // Hide the midi player, wait a little for the view
         // to refresh, and then start playing
-        this.setVisibility(View.GONE);
+//        this.setVisibility(View.GONE);
         timer.removeCallbacks(TimerCallback);
         timer.postDelayed(DoPlay, 1000);
     }
@@ -658,13 +451,6 @@ public class MidiPlayer extends LinearLayout {
      * music. The actual pause is done when the timer is invoked.
      */
     public void Pause() {
-        this.setVisibility(View.VISIBLE);
-        this.getParent().requestLayout();
-        this.requestLayout();
-        this.invalidate();
-
-//        context.getWindow().clearFlags(
-//                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         if (midifile == null || numberTracks() == 0) {
             return;
@@ -678,8 +464,7 @@ public class MidiPlayer extends LinearLayout {
      * The callback for the Stop button. If playing, initiate a stop and wait
      * for the timer to finish. Then do the actual stop.
      */
-    void Stop() {
-        this.setVisibility(View.VISIBLE);
+    public void Stop() {
         if (midifile == null || playstate == stopped) {
             return;
         }
@@ -719,17 +504,19 @@ public class MidiPlayer extends LinearLayout {
         startPulseTime = 0;
         currentPulseTime = 0;
         prevPulseTime = 0;
-        setVisibility(View.VISIBLE);
+//        setVisibility(View.VISIBLE);
         StopSound();
     }
 
     /**
+     * 倒带
+     * <p>
      * Rewind the midi music back one measure. The music must be in the paused
      * state. When we resume in playPause, we start at the currentPulseTime. So
      * to rewind, just decrease the currentPulseTime, and re-shade the sheet
      * music.
      */
-    void Rewind() {
+    public void Rewind() {
         if (midifile == null || playstate != paused) {
             return;
         }
@@ -761,12 +548,14 @@ public class MidiPlayer extends LinearLayout {
     }
 
     /**
+     * 快进
+     * <p>
      * Fast forward the midi music by one measure. The music must be in the
      * paused/stopped state. When we resume in playPause, we start at the
      * currentPulseTime. So to fast forward, just increase the currentPulseTime,
      * and re-shade the sheet music.
      */
-    void FastForward() {
+    public void FastForward() {
         if (midifile == null) {
             return;
         }

@@ -100,9 +100,9 @@ public class ChordSymbol implements MusicSymbol {
 
         for (i = 0; i < len; i++) {
             if (i > 1) {
-                if (!(midinotes.get(i).getNoteNumber() >= midinotes.get(i - 1).getNoteNumber())) {
-                    throw new IllegalArgumentException();
-                }
+//                if (!(midinotes.get(i).getNoteNumber() >= midinotes.get(i - 1).getNoteNumber())) {
+//                    throw new IllegalArgumentException();
+//                }
             }
             endtime = Math.max(endtime, midinotes.get(i).getEndTime());
         }

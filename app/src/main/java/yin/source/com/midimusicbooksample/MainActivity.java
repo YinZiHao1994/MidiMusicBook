@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.media.MediaScannerConnection;
@@ -21,6 +20,8 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.SeekBar;
+import android.widget.TextView;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -41,24 +42,12 @@ import yin.source.com.midimusicbook.utils.IOUtil;
 
 public class MainActivity extends AppCompatActivity {
 
-    // Message types sent from the BluetoothChatService Handler
-    public static final int MESSAGE_STATE_CHANGE = 1;
-    public static final int MESSAGE_READ = 2;
-    public static final int MESSAGE_WRITE = 3;
-    public static final int MESSAGE_DEVICE_NAME = 4;
-    public static final int MESSAGE_TOAST = 5;
-    // Key names received from the BluetoothChatService Handler
-    public static final String DEVICE_NAME = "device_name";
-    public static final String TOAST = "toast";
-    public static final String MidiTitleID = "MidiTitleID";
+
     public static final int settingsRequestCode = 1;
     // Debugging
     private static final String TAG = "BluetoothChat";
     private static final boolean D = true;
-    // Intent request codes
-    private static final int REQUEST_CONNECT_DEVICE_SECURE = 2;
-    private static final int REQUEST_CONNECT_DEVICE_INSECURE = 3;
-    private static final int REQUEST_ENABLE_BT = 4;
+
     private MidiPlayer player; /* The play/stop/rewind toolbar */
     private Piano piano; /* The piano at the top */ // 顶部的钢琴
     private SheetMusic sheet; /* The sheet music */ // 乐谱
@@ -90,6 +79,33 @@ public class MainActivity extends AppCompatActivity {
     private int PRELEFTPOSITION = -1;
     private int PRERIGHTPOSITION = -1;
 
+
+    private Button rewindButton;
+    /**
+     * The rewind button // 倒带按钮
+     */
+    private Button playButton;
+    /**
+     * The play/pause button // 播放暂停按钮
+     */
+    private Button stopButton;
+    /**
+     * The stop button // 停止按钮
+     */
+    private Button fastFwdButton;
+    /**
+     * The fast forward button // 快进按钮
+     */
+    private Button settingsButton;
+    /**
+     * The settings button // 设置按钮
+     */
+    private TextView speedText;
+    /**
+     * The "Speed %" label // 速度标签
+     */
+    private SeekBar speedBar;
+
     /**
      * Create this SheetMusicActivity. The Intent should have two parameters: -
      * data: The uri of the midi file to open. - MidiTitleID: The title of the
@@ -102,26 +118,12 @@ public class MainActivity extends AppCompatActivity {
     public void onCreate(Bundle state) {
         super.onCreate(state);
         setContentView(R.layout.activity_main);
-        player = (MidiPlayer) findViewById(R.id.midi_player);
+        createPlayerButton();
+//        player = (MidiPlayer) findViewById(R.id.midi_player);
+        player = new MidiPlayer(getApplicationContext());
         piano = (Piano) findViewById(R.id.piano);
         sheet = (SheetMusic) findViewById(R.id.sheet);
 //        player.SetPiano(piano);
-        player.addMidiPlayerCallback(new MidiPlayer.MidiPlayerCallback() {
-            @Override
-            public void onSettingMenuButtonClick() {
-                openOptionsMenu();
-            }
-
-            @Override
-            public void onSheetNeedShadeNotes(int currentPulseTime, int prevPulseTime, int gradualScroll) {
-
-            }
-
-            @Override
-            public void onPianoNeedShadeNotes(int currentPulseTime, int prevPulseTime) {
-
-            }
-        });
         piano.setPianoListener(new Piano.PianoListener() {
             @Override
             public void pianoKey(int position, int channel) {
@@ -134,7 +136,8 @@ public class MainActivity extends AppCompatActivity {
         TimeSigSymbol.LoadImages(this);
 
 
-        File fileFromAssets = FileManagerUtils.getFileFromAssets("piano_guide.mid", this);
+//        File fileFromAssets = FileManagerUtils.getFileFromAssets("piano_guide.mid", this);
+        File fileFromAssets = FileManagerUtils.getFileFromAssets("Pachelbel__Canon_in_D_major.mid", this);
         midifile = new MidiFile(fileFromAssets, fileFromAssets.getName());
 
         // Initialize the settings (MidiOptions).
@@ -149,12 +152,65 @@ public class MainActivity extends AppCompatActivity {
         options.shade1Color = settings.getInt("shade1Color", options.shade1Color);
         options.shade2Color = settings.getInt("shade2Color", options.shade2Color);
         options.showPiano = settings.getBoolean("showPiano", true);
+        options.scrollVert = true;
         String json = settings.getString("" + midiCRC, null);
         MidiOptions savedOptions = MidiOptions.fromJson(json);
         if (savedOptions != null) {
             options.merge(savedOptions);
         }
         createSheetMusic(options);
+    }
+
+    private void createPlayerButton() {
+
+        rewindButton = (Button) findViewById(R.id.btn_rewind);
+        stopButton = (Button) findViewById(R.id.btn_stop);
+        playButton = (Button) findViewById(R.id.btn_play);
+        fastFwdButton = (Button) findViewById(R.id.btn_fast_forward);
+        settingsButton = (Button) findViewById(R.id.btn_setting);
+        rewindButton = (Button) findViewById(R.id.btn_rewind);
+        speedBar = (SeekBar) findViewById(R.id.seek_speed);
+        speedText = (TextView) findViewById(R.id.tv_speed);
+
+
+        rewindButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                player.Rewind();
+            }
+        });
+        stopButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                player.Stop();
+            }
+        });
+        playButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                player.Play();
+            }
+        });
+        fastFwdButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                player.FastForward();
+            }
+        });
+        settingsButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                openOptionsMenu();
+            }
+        });
+        speedBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            public void onProgressChanged(SeekBar bar, int progress,
+                                          boolean fromUser) {
+                speedText.setText("Speed: " + String.format("%03d", progress) + "%");
+            }
+
+            public void onStartTrackingTouch(SeekBar bar) {
+            }
+
+            public void onStopTrackingTouch(SeekBar bar) {
+            }
+        });
+
     }
 
 
@@ -192,16 +248,8 @@ public class MainActivity extends AppCompatActivity {
         sheet.setPlayer(player);
         piano.SetMidiFile(midifile, options, player);
         piano.SetShadeColors(options.shade1Color, options.shade2Color);
-        player.SetMidiFile(midifile, options, sheet);
+        player.SetMidiFile(midifile, options);
         sheet.callOnDraw();
-    }
-
-    /**
-     * Always display this activity in landscape mode.
-     */
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
     }
 
     /**
@@ -226,9 +274,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.choose_song:
-                chooseSong();
-                return true;
             case R.id.song_settings:
                 changeSettings();
                 return true;
@@ -243,13 +288,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * To choose a new song, simply finish this activity. The previous activity
-     * is always the ChooseSongActivity.
-     */
-    private void chooseSong() {
-        this.finish();
-    }
 
     /**
      * To change the sheet music options, start the SettingsActivity. Pass the

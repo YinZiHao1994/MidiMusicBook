@@ -4,10 +4,48 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <yin.source.com.midimusicbook.midi.musicBook.MidiPlayer
-        android:id="@+id/midi_player"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+   <LinearLayout
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       android:background="#000000">
+
+       <Button
+           android:id="@+id/btn_rewind"
+           style="@style/MidiPlayerButton"
+           android:background="@drawable/rewind" />
+
+       <Button
+           android:id="@+id/btn_stop"
+           style="@style/MidiPlayerButton"
+           android:background="@drawable/stop" />
+
+       <Button
+           android:id="@+id/btn_play"
+           style="@style/MidiPlayerButton"
+           android:background="@drawable/play" />
+
+       <Button
+           android:id="@+id/btn_fast_forward"
+           style="@style/MidiPlayerButton"
+           android:background="@drawable/fastforward" />
+
+       <TextView
+           android:id="@+id/tv_speed"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content" />
+
+       <SeekBar
+           android:id="@+id/seek_speed"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:max="150"
+           android:progress="100" />
+
+       <Button
+           android:id="@+id/btn_setting"
+           style="@style/MidiPlayerButton"
+           android:background="@drawable/settings" />
+   </LinearLayout>
 
     <yin.source.com.midimusicbook.midi.musicBook.Piano
         android:id="@+id/piano"
