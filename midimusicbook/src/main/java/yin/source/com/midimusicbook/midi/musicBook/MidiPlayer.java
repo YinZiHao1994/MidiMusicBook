@@ -53,82 +53,61 @@ import yin.source.com.midimusicbook.midi.baseBean.MidiOptions;
  * and determines which notes to shade.
  */
 public class MidiPlayer implements MidiPlayController {
-    final int stopped = 1;
-    /**
-     * Currently stopped // 目前停止状态
-     */
-    final int playing = 2;
-    /**
-     * Currently playing music // 目前正在播放音乐状态
-     */
-    final int paused = 3;
-    /**
-     * Currently paused // 目前暂停状态
-     */
-    final int initStop = 4;
-    /**
-     * Transitioning from playing to stop // 从播放状态转变至停止状态
-     */
-    final int initPause = 5;
-    /**
-     * Transitioning from playing to pause // 从播放状态转变至暂停状态
-     */
 
     final String tempSoundFile = "playing.mid";
     /**
      * The seekbar for controlling the playback speed
      */
 
-    int playstate;
+    private PlayState playState;
     /**
      * The filename to play sound from // 临时音乐文件
      */
 
-    MediaPlayer player;
+    private MediaPlayer player;
     /**
      * For playing the audio // 播放器
      */
-    MidiFile midifile;
+    private MidiFile midifile;
     /**
      * The midi file to play // midi文件
      */
-    MidiOptions options;
+    private MidiOptions options;
     /**
      * The sound options for playing the midi file // 播放设置选项
      */
-    double pulsesPerMsec;
+    private double pulsesPerMsec;
     /**
      * The number of pulses per millisec // 每毫秒的节拍数
      */
-    Handler timer;
+    private Handler timer;
     /**
      * Timer used to update the sheet music while playing // 正在播放时用来更新乐谱的计时器
      */
-    long startTime;
+    private long startTime;
     /**
      * Absolute time when music started playing (msec) // 当音乐开始播放时的绝对时间（单位微秒）
      */
-    double startPulseTime;
+    private double startPulseTime;
     /**
      * Time (in pulses) when music started playing // 音乐开始播放时的节拍
      */
-    double currentPulseTime;
+    private double currentPulseTime;
     /**
      * Time (in pulses) music is currently at // 音乐现在的节拍
      */
-    double prevPulseTime;
+    private double prevPulseTime;
     /**
      * Time (in pulses) music was last at // 当前音乐的前一个节拍
      */
-    Context context;
-
+    private Context context;
     private List<MidiPlayerCallback> midiPlayerCallbackList;
     /**
      * If we're paused, reshade the sheet music and piano.
      */
     Runnable ReShade = new Runnable() {
         public void run() {
-            if (playstate == paused || playstate == stopped) {
+            if (playState == PlayState.PAUSED || playState == PlayState.STOPPED) {
 
                 if (midiPlayerCallbackList != null) {
                     for (MidiPlayerCallback midiPlayerCallback : midiPlayerCallbackList) {
@@ -165,7 +144,7 @@ public class MidiPlayer implements MidiPlayController {
                 }
                 startPulseTime = currentPulseTime;
                 options.pauseTime = (int) (currentPulseTime - options.shifttime);
-            } else if (playstate == paused) {
+            } else if (playState == PlayState.PAUSED) {
                 startPulseTime = currentPulseTime;
                 options.pauseTime = (int) (currentPulseTime - options.shifttime);
             } else {
@@ -176,7 +155,7 @@ public class MidiPlayer implements MidiPlayController {
                         - midifile.getTime().getQuarter();
             }
             CreateMidiFile();
-            playstate = playing;
+            playState = PlayState.PLAYING;
             PlaySound(tempSoundFile);
             startTime = SystemClock.uptimeMillis();
 
@@ -206,14 +185,14 @@ public class MidiPlayer implements MidiPlayController {
     Runnable TimerCallback = new Runnable() {
         public void run() {
             if (midifile == null) {
-                playstate = stopped;
+                playState = PlayState.STOPPED;
                 return;
-            } else if (playstate == stopped || playstate == paused) {
+            } else if (playState == PlayState.STOPPED || playState == PlayState.PAUSED) {
                 /* This case should never happen */
                 return;
-            } else if (playstate == initStop) {
+            } else if (playState == PlayState.INIT_STOP) {
                 return;
-            } else if (playstate == playing) {
+            } else if (playState == PlayState.PLAYING) {
                 long msec = SystemClock.uptimeMillis() - startTime;
                 Log.i("MidiPlayer--msec", msec + "");
                 prevPulseTime = currentPulseTime;
@@ -244,7 +223,7 @@ public class MidiPlayer implements MidiPlayController {
 //                piano.ShadeNotes((int) currentPulseTime, (int) prevPulseTime);
                 timer.postDelayed(TimerCallback, 100);
                 return;
-            } else if (playstate == initPause) {
+            } else if (playState == PlayState.INIT_PAUSE) {
                 long msec = SystemClock.uptimeMillis() - startTime;
                 StopSound();
 
@@ -257,7 +236,7 @@ public class MidiPlayer implements MidiPlayController {
                     }
                 }
 //                sheet.ShadeNotes((int) currentPulseTime, (int) prevPulseTime, SheetMusic.ImmediateScroll);
-                playstate = paused;
+                playState = PlayState.PAUSED;
                 timer.postDelayed(ReShade, 100);
                 return;
             }
@@ -266,7 +245,7 @@ public class MidiPlayer implements MidiPlayController {
 
     public MidiPlayer(Context context) {
         this.context = context;
-        playstate = stopped;
+        playState = PlayState.STOPPED;
         startTime = SystemClock.uptimeMillis();
         startPulseTime = 0;
         currentPulseTime = 0;
@@ -298,7 +277,7 @@ public class MidiPlayer implements MidiPlayController {
          * If we're paused, and using the same midi file, redraw the highlighted
          * notes.
          */
-        if ((file == midifile && midifile != null && playstate == paused)) {
+        if ((file == midifile && midifile != null && playState == PlayState.PAUSED)) {
             options = opt;
 
 
@@ -433,11 +412,10 @@ public class MidiPlayer implements MidiPlayController {
     public void Play() {
         if (midifile == null || numberTracks() == 0) {
             return;
-        } else if (playstate == initStop || playstate == initPause
-                || playstate == playing) {
+        } else if (playState == PlayState.INIT_STOP || playState == PlayState.INIT_PAUSE || playState == PlayState.PLAYING) {
             return;
         }
-        // playstate is stopped or paused
+        // playState is stopped or paused
 
         // Hide the midi player, wait a little for the view
         // to refresh, and then start playing
@@ -454,8 +432,8 @@ public class MidiPlayer implements MidiPlayController {
 
         if (midifile == null || numberTracks() == 0) {
             return;
-        } else if (playstate == playing) {
-            playstate = initPause;
+        } else if (playState == PlayState.PLAYING) {
+            playState = PlayState.INIT_PAUSE;
             return;
         }
     }
@@ -465,15 +443,15 @@ public class MidiPlayer implements MidiPlayController {
      * for the timer to finish. Then do the actual stop.
      */
     public void Stop() {
-        if (midifile == null || playstate == stopped) {
+        if (midifile == null || playState == PlayState.STOPPED) {
             return;
         }
 
-        if (playstate == initPause || playstate == initStop || playstate == playing) {
+        if (playState == PlayState.INIT_PAUSE || playState == PlayState.INIT_STOP || playState == PlayState.PLAYING) {
             /* Wait for timer to finish */
-            playstate = initStop;
+            playState = PlayState.INIT_STOP;
             DoStop();
-        } else if (playstate == paused) {
+        } else if (playState == PlayState.PAUSED) {
             DoStop();
         }
     }
@@ -483,7 +461,7 @@ public class MidiPlayer implements MidiPlayController {
      * clearing the state.
      */
     void DoStop() {
-        playstate = stopped;
+        playState = PlayState.STOPPED;
         timer.removeCallbacks(TimerCallback);
 
         if (midiPlayerCallbackList != null) {
@@ -517,7 +495,7 @@ public class MidiPlayer implements MidiPlayController {
      * music.
      */
     public void Rewind() {
-        if (midifile == null || playstate != paused) {
+        if (midifile == null || playState != PlayState.PAUSED) {
             return;
         }
 
@@ -559,10 +537,10 @@ public class MidiPlayer implements MidiPlayController {
         if (midifile == null) {
             return;
         }
-        if (playstate != paused && playstate != stopped) {
+        if (playState != PlayState.PAUSED && playState != PlayState.STOPPED) {
             return;
         }
-        playstate = paused;
+        playState = PlayState.PAUSED;
         if (midiPlayerCallbackList != null) {
             for (MidiPlayerCallback midiPlayerCallback : midiPlayerCallbackList) {
                 midiPlayerCallback.onSheetNeedShadeNotes(-10, (int) currentPulseTime, SheetMusic.DontScroll);
@@ -597,10 +575,10 @@ public class MidiPlayer implements MidiPlayController {
         if (midifile == null) {
             return;
         }
-        if (playstate != paused && playstate != stopped) {
+        if (playState != PlayState.PAUSED && playState != PlayState.STOPPED) {
             return;
         }
-        playstate = paused;
+        playState = PlayState.PAUSED;
         if (midiPlayerCallbackList != null) {
             for (MidiPlayerCallback midiPlayerCallback : midiPlayerCallbackList) {
                 midiPlayerCallback.onSheetNeedShadeNotes(-10, (int) currentPulseTime, SheetMusic.DontScroll);
@@ -632,7 +610,7 @@ public class MidiPlayer implements MidiPlayController {
      * again.
      */
     private void RestartPlayMeasuresInLoop() {
-        playstate = stopped;
+        playState = PlayState.STOPPED;
 
         if (midiPlayerCallbackList != null) {
             for (MidiPlayerCallback midiPlayerCallback : midiPlayerCallbackList) {
@@ -649,7 +627,6 @@ public class MidiPlayer implements MidiPlayController {
         StopSound();
         timer.postDelayed(DoPlay, 300);
     }
-
 
     public double getCurrentPulseTime() {
         return currentPulseTime;
@@ -678,6 +655,14 @@ public class MidiPlayer implements MidiPlayController {
         if (!midiPlayerCallbackList.contains(midiPlayerCallback)) {
             midiPlayerCallbackList.add(midiPlayerCallback);
         }
+    }
+
+    public PlayState getPlayState() {
+        return playState;
+    }
+
+    public enum PlayState {
+        STOPPED, PLAYING, PAUSED, INIT_STOP, INIT_PAUSE
     }
 
     public interface MidiPlayerCallback {

@@ -183,12 +183,12 @@ public class Piano extends SurfaceView implements SurfaceHolder.Callback, MidiPl
     protected void onSizeChanged(int newwidth, int newheight, int oldwidth, int oldheight) {
         super.onSizeChanged(newwidth, newheight, oldwidth, oldheight);
         blackKeyOffsets = new int[]{
-                WhiteKeyWidth - BlackKeyWidth / 2 - 1,
-                WhiteKeyWidth + BlackKeyWidth / 2 - 1,
+                WhiteKeyWidth - BlackKeyWidth / 2,
+                WhiteKeyWidth + BlackKeyWidth / 2,
                 2 * WhiteKeyWidth - BlackKeyWidth / 2,
                 2 * WhiteKeyWidth + BlackKeyWidth / 2,
-                4 * WhiteKeyWidth - BlackKeyWidth / 2 - 1,
-                4 * WhiteKeyWidth + BlackKeyWidth / 2 - 1,
+                4 * WhiteKeyWidth - BlackKeyWidth / 2,
+                4 * WhiteKeyWidth + BlackKeyWidth / 2,
                 5 * WhiteKeyWidth - BlackKeyWidth / 2,
                 5 * WhiteKeyWidth + BlackKeyWidth / 2,
                 6 * WhiteKeyWidth - BlackKeyWidth / 2,

@@ -1413,7 +1413,7 @@ public class SheetMusic extends SurfaceView implements SurfaceHolder.Callback, S
         switch (action) {
             case MotionEvent.ACTION_DOWN:
                 // If we touch while music is playing, stop the midi player 
-                if (player != null) {
+                if (player != null && player.getPlayState() == MidiPlayer.PlayState.PLAYING) {
                     player.Pause();
                     scrollAnimation.stopMotion();
                 }
