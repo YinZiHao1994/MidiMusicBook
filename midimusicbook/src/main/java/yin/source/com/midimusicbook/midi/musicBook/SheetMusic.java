@@ -419,7 +419,7 @@ public class SheetMusic extends SurfaceView implements SurfaceHolder.Callback, S
         zoom = 1.0f;
 
         filename = file.getFileName();
-        SetColors(null, options.shade1Color, options.shade2Color);
+        SetColors(null, options.colorRightHandShade, options.colorLeftHandShade);
         paint = new Paint();
         paint.setTextSize(12.0f);
         Typeface typeface = Typeface.create(paint.getTypeface(), Typeface.NORMAL);
@@ -1487,10 +1487,6 @@ public class SheetMusic extends SurfaceView implements SurfaceHolder.Callback, S
         return result;
     }
 
-    @Override
-    public void onSettingMenuButtonClick() {
-
-    }
 
 //    @Override
 //    public void onPlayerStop() {

@@ -99,11 +99,12 @@ public class ChordSymbol implements MusicSymbol {
         endtime = midinotes.get(0).getEndTime();
 
         for (i = 0; i < len; i++) {
-            if (i > 1) {
+            //todo 原来的代码为什么要在这里抛出异常?
+//            if (i > 1) {
 //                if (!(midinotes.get(i).getNoteNumber() >= midinotes.get(i - 1).getNoteNumber())) {
 //                    throw new IllegalArgumentException();
 //                }
-            }
+//            }
             endtime = Math.max(endtime, midinotes.get(i).getEndTime());
         }
 
@@ -278,6 +279,317 @@ public class ChordSymbol implements MusicSymbol {
     }
 
     /**
+     * Return true if the chords can be connected, where their stems are
+     * joined by a horizontal beam. In order to create the beam:
+     * <p/>
+     * - The chords must be in the same measure.
+     * - The chord stems should not be a dotted duration.
+     * - The chord stems must be the same duration, with one exception
+     * (Dotted Eighth to Sixteenth).
+     * - The stems must all point in the same direction (up or down).
+     * - The chord cannot already be part of a beam.
+     * <p/>
+     * - 6-chord beams must be 8th notes in 3/4, 6/8, or 6/4 time
+     * - 3-chord beams must be either triplets, or 8th notes (12/8 time signature)
+     * - 4-chord beams are ok for 2/2, 2/4 or 4/4 time, any duration
+     * - 4-chord beams are ok for other times if the duration is 16th
+     * - 2-chord beams are ok for any duration
+     * <p/>
+     * If startQuarter is true, the first note should start on a quarter note
+     * (only applies to 2-chord beams).
+     */
+    public static boolean CanCreateBeam(ChordSymbol[] chords, TimeSignature time, boolean startQuarter) {
+        int numChords = chords.length;
+        Stem firstStem = chords[0].getStem();
+        Stem lastStem = chords[chords.length - 1].getStem();
+        if (firstStem == null || lastStem == null) {
+            return false;
+        }
+        int measure = chords[0].getStartTime() / time.getMeasure();
+        NoteDuration dur = firstStem.getDuration();
+        NoteDuration dur2 = lastStem.getDuration();
+
+        boolean dotted8_to_16 = false;
+        if (chords.length == 2 && dur == NoteDuration.DottedEighth &&
+                dur2 == NoteDuration.Sixteenth) {
+            dotted8_to_16 = true;
+        }
+
+        if (dur == NoteDuration.Whole || dur == NoteDuration.Half ||
+                dur == NoteDuration.DottedHalf || dur == NoteDuration.Quarter ||
+                dur == NoteDuration.DottedQuarter ||
+                (dur == NoteDuration.DottedEighth && !dotted8_to_16)) {
+
+            return false;
+        }
+
+        if (numChords == 6) {
+            if (dur != NoteDuration.Eighth) {
+                return false;
+            }
+            boolean correctTime =
+                    ((time.getNumerator() == 3 && time.getDenominator() == 4) ||
+                            (time.getNumerator() == 6 && time.getDenominator() == 8) ||
+                            (time.getNumerator() == 6 && time.getDenominator() == 4));
+            if (!correctTime) {
+                return false;
+            }
+
+            if (time.getNumerator() == 6 && time.getDenominator() == 4) {
+                /* first chord must start at 1st or 4th quarter note */
+                int beat = time.getQuarter() * 3;
+                if ((chords[0].getStartTime() % beat) > time.getQuarter() / 6) {
+                    return false;
+                }
+            }
+        } else if (numChords == 4) {
+            if (time.getNumerator() == 3 && time.getDenominator() == 8) {
+                return false;
+            }
+            boolean correctTime =
+                    (time.getNumerator() == 2 || time.getNumerator() == 4 || time.getNumerator() == 8);
+            if (!correctTime && dur != NoteDuration.Sixteenth) {
+                return false;
+            }
+
+            /* chord must start on quarter note */
+            int beat = time.getQuarter();
+            if (dur == NoteDuration.Eighth) {
+                /* 8th note chord must start on 1st or 3rd quarter beat */
+                beat = time.getQuarter() * 2;
+            } else if (dur == NoteDuration.ThirtySecond) {
+                /* 32nd note must start on an 8th beat */
+                beat = time.getQuarter() / 2;
+            }
+
+            if ((chords[0].getStartTime() % beat) > time.getQuarter() / 6) {
+                return false;
+            }
+        } else if (numChords == 3) {
+            boolean valid = (dur == NoteDuration.Triplet) ||
+                    (dur == NoteDuration.Eighth &&
+                            time.getNumerator() == 12 && time.getDenominator() == 8);
+            if (!valid) {
+                return false;
+            }
+
+            /* chord must start on quarter note */
+            int beat = time.getQuarter();
+            if (time.getNumerator() == 12 && time.getDenominator() == 8) {
+                /* In 12/8 time, chord must start on 3*8th beat */
+                beat = time.getQuarter() / 2 * 3;
+            }
+            if ((chords[0].getStartTime() % beat) > time.getQuarter() / 6) {
+                return false;
+            }
+        } else if (numChords == 2) {
+            if (startQuarter) {
+                int beat = time.getQuarter();
+                if ((chords[0].getStartTime() % beat) > time.getQuarter() / 6) {
+                    return false;
+                }
+            }
+        }
+
+        for (ChordSymbol chord : chords) {
+            if ((chord.getStartTime() / time.getMeasure()) != measure)
+                return false;
+            if (chord.getStem() == null)
+                return false;
+            if (chord.getStem().getDuration() != dur && !dotted8_to_16)
+                return false;
+            if (chord.getStem().IsBeam())
+                return false;
+        }
+
+        /* Check that all stems can point in same direction */
+        boolean hasTwoStems = false;
+        int direction = Stem.Up;
+        for (ChordSymbol chord : chords) {
+            if (chord.getHasTwoStems()) {
+                if (hasTwoStems && chord.getStem().getDirection() != direction) {
+                    return false;
+                }
+                hasTwoStems = true;
+                direction = chord.getStem().getDirection();
+            }
+        }
+
+        /* Get the final stem direction */
+        if (!hasTwoStems) {
+            WhiteNote note1;
+            WhiteNote note2;
+            note1 = (firstStem.getDirection() == Stem.Up ? firstStem.getTop() : firstStem.getBottom());
+            note2 = (lastStem.getDirection() == Stem.Up ? lastStem.getTop() : lastStem.getBottom());
+            direction = StemDirection(note1, note2, chords[0].getClef());
+        }
+
+        /* If the notes are too far apart, don't use a beam */
+        if (direction == Stem.Up) {
+            if (Math.abs(firstStem.getTop().Dist(lastStem.getTop())) >= 11) {
+                return false;
+            }
+        } else {
+            if (Math.abs(firstStem.getBottom().Dist(lastStem.getBottom())) >= 11) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Connect the chords using a horizontal beam.
+     * <p/>
+     * spacing is the horizontal distance (in pixels) between the right side
+     * of the first chord, and the right side of the last chord.
+     * <p/>
+     * To make the beam:
+     * - Change the stem directions for each chord, so they match.
+     * - In the first chord, pass the stem location of the last chord, and
+     * the horizontal spacing to that last stem.
+     * - Mark all chords (except the first) as "receiver" pairs, so that
+     * they don't draw a curvy stem.
+     */
+    public static void CreateBeam(ChordSymbol[] chords, int spacing) {
+        Stem firstStem = chords[0].getStem();
+        Stem lastStem = chords[chords.length - 1].getStem();
+
+        /* Calculate the new stem direction */
+        int newdirection = -1;
+        for (ChordSymbol chord : chords) {
+            if (chord.getHasTwoStems()) {
+                newdirection = chord.getStem().getDirection();
+                break;
+            }
+        }
+
+        if (newdirection == -1) {
+            WhiteNote note1;
+            WhiteNote note2;
+            note1 = (firstStem.getDirection() == Stem.Up ? firstStem.getTop() : firstStem.getBottom());
+            note2 = (lastStem.getDirection() == Stem.Up ? lastStem.getTop() : lastStem.getBottom());
+            newdirection = StemDirection(note1, note2, chords[0].getClef());
+        }
+        for (ChordSymbol chord : chords) {
+            chord.getStem().setDirection(newdirection);
+        }
+
+        if (chords.length == 2) {
+            BringStemsCloser(chords);
+        } else {
+            LineUpStemEnds(chords);
+        }
+
+        firstStem.SetPair(lastStem, spacing);
+        for (int i = 1; i < chords.length; i++) {
+            chords[i].getStem().setReceiver(true);
+        }
+    }
+
+    /**
+     * We're connecting the stems of two chords using a horizontal beam.
+     * Adjust the vertical endpoint of the stems, so that they're closer
+     * together.  For a dotted 8th to 16th beam, increase the stem of the
+     * dotted eighth, so that it's as long as a 16th stem.
+     */
+    static void
+    BringStemsCloser(ChordSymbol[] chords) {
+        Stem firstStem = chords[0].getStem();
+        Stem lastStem = chords[1].getStem();
+
+        /* If we're connecting a dotted 8th to a 16th, increase
+         * the stem end of the dotted eighth.
+         */
+        if (firstStem.getDuration() == NoteDuration.DottedEighth &&
+                lastStem.getDuration() == NoteDuration.Sixteenth) {
+            if (firstStem.getDirection() == Stem.Up) {
+                firstStem.setEnd(firstStem.getEnd().Add(2));
+            } else {
+                firstStem.setEnd(firstStem.getEnd().Add(-2));
+            }
+        }
+
+        /* Bring the stem ends closer together */
+        int distance = Math.abs(firstStem.getEnd().Dist(lastStem.getEnd()));
+        if (firstStem.getDirection() == Stem.Up) {
+            if (WhiteNote.Max(firstStem.getEnd(), lastStem.getEnd()) == firstStem.getEnd())
+                lastStem.setEnd(lastStem.getEnd().Add(distance / 2));
+            else
+                firstStem.setEnd(firstStem.getEnd().Add(distance / 2));
+        } else {
+            if (WhiteNote.Min(firstStem.getEnd(), lastStem.getEnd()) == firstStem.getEnd())
+                lastStem.setEnd(lastStem.getEnd().Add(-distance / 2));
+            else
+                firstStem.setEnd(firstStem.getEnd().Add(-distance / 2));
+        }
+    }
+
+    /**
+     * We're connecting the stems of three or more chords using a horizontal beam.
+     * Adjust the vertical endpoint of the stems, so that the middle chord stems
+     * are vertically in between the first and last stem.
+     */
+    static void
+    LineUpStemEnds(ChordSymbol[] chords) {
+        Stem firstStem = chords[0].getStem();
+        Stem lastStem = chords[chords.length - 1].getStem();
+        Stem middleStem = chords[1].getStem();
+
+        if (firstStem.getDirection() == Stem.Up) {
+            /* Find the highest stem. The beam will either:
+             * - Slant downwards (first stem is highest)
+             * - Slant upwards (last stem is highest)
+             * - Be straight (middle stem is highest)
+             */
+            WhiteNote top = firstStem.getEnd();
+            for (ChordSymbol chord : chords) {
+                top = WhiteNote.Max(top, chord.getStem().getEnd());
+            }
+            if (top == firstStem.getEnd() && top.Dist(lastStem.getEnd()) >= 2) {
+                firstStem.setEnd(top);
+                middleStem.setEnd(top.Add(-1));
+                lastStem.setEnd(top.Add(-2));
+            } else if (top == lastStem.getEnd() && top.Dist(firstStem.getEnd()) >= 2) {
+                firstStem.setEnd(top.Add(-2));
+                middleStem.setEnd(top.Add(-1));
+                lastStem.setEnd(top);
+            } else {
+                firstStem.setEnd(top);
+                middleStem.setEnd(top);
+                lastStem.setEnd(top);
+            }
+        } else {
+            /* Find the bottommost stem. The beam will either:
+             * - Slant upwards (first stem is lowest)
+             * - Slant downwards (last stem is lowest)
+             * - Be straight (middle stem is highest)
+             */
+            WhiteNote bottom = firstStem.getEnd();
+            for (ChordSymbol chord : chords) {
+                bottom = WhiteNote.Min(bottom, chord.getStem().getEnd());
+            }
+
+            if (bottom == firstStem.getEnd() && lastStem.getEnd().Dist(bottom) >= 2) {
+                middleStem.setEnd(bottom.Add(1));
+                lastStem.setEnd(bottom.Add(2));
+            } else if (bottom == lastStem.getEnd() && firstStem.getEnd().Dist(bottom) >= 2) {
+                middleStem.setEnd(bottom.Add(1));
+                firstStem.setEnd(bottom.Add(2));
+            } else {
+                firstStem.setEnd(bottom);
+                middleStem.setEnd(bottom);
+                lastStem.setEnd(bottom);
+            }
+        }
+
+        /* All middle stems have the same end */
+        for (int i = 1; i < chords.length - 1; i++) {
+            Stem stem = chords[i].getStem();
+            stem.setEnd(middleStem.getEnd());
+        }
+    }
+
+    /**
      * Get the time (in pulses) this symbol occurs at.
      * This is used to determine the measure this symbol belongs to.
      */
@@ -312,7 +624,7 @@ public class ChordSymbol implements MusicSymbol {
      * is used when making chord pairs (chords joined by a horizontal
      * beam stem). The stem durations must match in order to make
      * a chord pair.  If a chord has two stems, we always return
-     * the one with a smaller duration, because it has a better 
+     * the one with a smaller duration, because it has a better
      * chance of making a pair.
      */
     public Stem getStem() {
@@ -368,7 +680,6 @@ public class ChordSymbol implements MusicSymbol {
         }
         return result;
     }
-
 
     /**
      * Get the number of pixels this symbol extends above the staff. Used
@@ -432,7 +743,6 @@ public class ChordSymbol implements MusicSymbol {
         return result;
     }
 
-
     /**
      * Get the name for this note
      */
@@ -479,7 +789,6 @@ public class ChordSymbol implements MusicSymbol {
             return "";
         }
     }
-
 
     /**
      * Get the letter (A, A#, Bb) representing this note
@@ -714,11 +1023,11 @@ public class ChordSymbol implements MusicSymbol {
                 continue;
             }
 
-            // Get the x,y position to draw the note 
+            // Get the x,y position to draw the note
             int ynote = ytop + topstaff.Dist(note.whitenote) *
                     SheetMusic.NoteHeight / 2;
 
-            // Draw the letter to the right side of the note 
+            // Draw the letter to the right side of the note
             int xnote = SheetMusic.NoteWidth + SheetMusic.NoteWidth / 2;
 
             if (note.duration == NoteDuration.DottedHalf ||
@@ -732,320 +1041,6 @@ public class ChordSymbol implements MusicSymbol {
                     ynote + SheetMusic.NoteHeight / 2, paint);
         }
     }
-
-
-    /**
-     * Return true if the chords can be connected, where their stems are
-     * joined by a horizontal beam. In order to create the beam:
-     * <p/>
-     * - The chords must be in the same measure.
-     * - The chord stems should not be a dotted duration.
-     * - The chord stems must be the same duration, with one exception
-     * (Dotted Eighth to Sixteenth).
-     * - The stems must all point in the same direction (up or down).
-     * - The chord cannot already be part of a beam.
-     * <p/>
-     * - 6-chord beams must be 8th notes in 3/4, 6/8, or 6/4 time
-     * - 3-chord beams must be either triplets, or 8th notes (12/8 time signature)
-     * - 4-chord beams are ok for 2/2, 2/4 or 4/4 time, any duration
-     * - 4-chord beams are ok for other times if the duration is 16th
-     * - 2-chord beams are ok for any duration
-     * <p/>
-     * If startQuarter is true, the first note should start on a quarter note
-     * (only applies to 2-chord beams).
-     */
-    public static boolean CanCreateBeam(ChordSymbol[] chords, TimeSignature time, boolean startQuarter) {
-        int numChords = chords.length;
-        Stem firstStem = chords[0].getStem();
-        Stem lastStem = chords[chords.length - 1].getStem();
-        if (firstStem == null || lastStem == null) {
-            return false;
-        }
-        int measure = chords[0].getStartTime() / time.getMeasure();
-        NoteDuration dur = firstStem.getDuration();
-        NoteDuration dur2 = lastStem.getDuration();
-
-        boolean dotted8_to_16 = false;
-        if (chords.length == 2 && dur == NoteDuration.DottedEighth &&
-                dur2 == NoteDuration.Sixteenth) {
-            dotted8_to_16 = true;
-        }
-
-        if (dur == NoteDuration.Whole || dur == NoteDuration.Half ||
-                dur == NoteDuration.DottedHalf || dur == NoteDuration.Quarter ||
-                dur == NoteDuration.DottedQuarter ||
-                (dur == NoteDuration.DottedEighth && !dotted8_to_16)) {
-
-            return false;
-        }
-
-        if (numChords == 6) {
-            if (dur != NoteDuration.Eighth) {
-                return false;
-            }
-            boolean correctTime =
-                    ((time.getNumerator() == 3 && time.getDenominator() == 4) ||
-                            (time.getNumerator() == 6 && time.getDenominator() == 8) ||
-                            (time.getNumerator() == 6 && time.getDenominator() == 4));
-            if (!correctTime) {
-                return false;
-            }
-
-            if (time.getNumerator() == 6 && time.getDenominator() == 4) {
-                /* first chord must start at 1st or 4th quarter note */
-                int beat = time.getQuarter() * 3;
-                if ((chords[0].getStartTime() % beat) > time.getQuarter() / 6) {
-                    return false;
-                }
-            }
-        } else if (numChords == 4) {
-            if (time.getNumerator() == 3 && time.getDenominator() == 8) {
-                return false;
-            }
-            boolean correctTime =
-                    (time.getNumerator() == 2 || time.getNumerator() == 4 || time.getNumerator() == 8);
-            if (!correctTime && dur != NoteDuration.Sixteenth) {
-                return false;
-            }
-
-            /* chord must start on quarter note */
-            int beat = time.getQuarter();
-            if (dur == NoteDuration.Eighth) {
-                /* 8th note chord must start on 1st or 3rd quarter beat */
-                beat = time.getQuarter() * 2;
-            } else if (dur == NoteDuration.ThirtySecond) {
-                /* 32nd note must start on an 8th beat */
-                beat = time.getQuarter() / 2;
-            }
-
-            if ((chords[0].getStartTime() % beat) > time.getQuarter() / 6) {
-                return false;
-            }
-        } else if (numChords == 3) {
-            boolean valid = (dur == NoteDuration.Triplet) ||
-                    (dur == NoteDuration.Eighth &&
-                            time.getNumerator() == 12 && time.getDenominator() == 8);
-            if (!valid) {
-                return false;
-            }
-
-            /* chord must start on quarter note */
-            int beat = time.getQuarter();
-            if (time.getNumerator() == 12 && time.getDenominator() == 8) {
-                /* In 12/8 time, chord must start on 3*8th beat */
-                beat = time.getQuarter() / 2 * 3;
-            }
-            if ((chords[0].getStartTime() % beat) > time.getQuarter() / 6) {
-                return false;
-            }
-        } else if (numChords == 2) {
-            if (startQuarter) {
-                int beat = time.getQuarter();
-                if ((chords[0].getStartTime() % beat) > time.getQuarter() / 6) {
-                    return false;
-                }
-            }
-        }
-
-        for (ChordSymbol chord : chords) {
-            if ((chord.getStartTime() / time.getMeasure()) != measure)
-                return false;
-            if (chord.getStem() == null)
-                return false;
-            if (chord.getStem().getDuration() != dur && !dotted8_to_16)
-                return false;
-            if (chord.getStem().IsBeam())
-                return false;
-        }
-
-        /* Check that all stems can point in same direction */
-        boolean hasTwoStems = false;
-        int direction = Stem.Up;
-        for (ChordSymbol chord : chords) {
-            if (chord.getHasTwoStems()) {
-                if (hasTwoStems && chord.getStem().getDirection() != direction) {
-                    return false;
-                }
-                hasTwoStems = true;
-                direction = chord.getStem().getDirection();
-            }
-        }
-
-        /* Get the final stem direction */
-        if (!hasTwoStems) {
-            WhiteNote note1;
-            WhiteNote note2;
-            note1 = (firstStem.getDirection() == Stem.Up ? firstStem.getTop() : firstStem.getBottom());
-            note2 = (lastStem.getDirection() == Stem.Up ? lastStem.getTop() : lastStem.getBottom());
-            direction = StemDirection(note1, note2, chords[0].getClef());
-        }
-
-        /* If the notes are too far apart, don't use a beam */
-        if (direction == Stem.Up) {
-            if (Math.abs(firstStem.getTop().Dist(lastStem.getTop())) >= 11) {
-                return false;
-            }
-        } else {
-            if (Math.abs(firstStem.getBottom().Dist(lastStem.getBottom())) >= 11) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-
-    /**
-     * Connect the chords using a horizontal beam.
-     * <p/>
-     * spacing is the horizontal distance (in pixels) between the right side
-     * of the first chord, and the right side of the last chord.
-     * <p/>
-     * To make the beam:
-     * - Change the stem directions for each chord, so they match.
-     * - In the first chord, pass the stem location of the last chord, and
-     * the horizontal spacing to that last stem.
-     * - Mark all chords (except the first) as "receiver" pairs, so that
-     * they don't draw a curvy stem.
-     */
-    public static void CreateBeam(ChordSymbol[] chords, int spacing) {
-        Stem firstStem = chords[0].getStem();
-        Stem lastStem = chords[chords.length - 1].getStem();
-
-        /* Calculate the new stem direction */
-        int newdirection = -1;
-        for (ChordSymbol chord : chords) {
-            if (chord.getHasTwoStems()) {
-                newdirection = chord.getStem().getDirection();
-                break;
-            }
-        }
-
-        if (newdirection == -1) {
-            WhiteNote note1;
-            WhiteNote note2;
-            note1 = (firstStem.getDirection() == Stem.Up ? firstStem.getTop() : firstStem.getBottom());
-            note2 = (lastStem.getDirection() == Stem.Up ? lastStem.getTop() : lastStem.getBottom());
-            newdirection = StemDirection(note1, note2, chords[0].getClef());
-        }
-        for (ChordSymbol chord : chords) {
-            chord.getStem().setDirection(newdirection);
-        }
-
-        if (chords.length == 2) {
-            BringStemsCloser(chords);
-        } else {
-            LineUpStemEnds(chords);
-        }
-
-        firstStem.SetPair(lastStem, spacing);
-        for (int i = 1; i < chords.length; i++) {
-            chords[i].getStem().setReceiver(true);
-        }
-    }
-
-    /**
-     * We're connecting the stems of two chords using a horizontal beam.
-     * Adjust the vertical endpoint of the stems, so that they're closer
-     * together.  For a dotted 8th to 16th beam, increase the stem of the
-     * dotted eighth, so that it's as long as a 16th stem.
-     */
-    static void
-    BringStemsCloser(ChordSymbol[] chords) {
-        Stem firstStem = chords[0].getStem();
-        Stem lastStem = chords[1].getStem();
-
-        /* If we're connecting a dotted 8th to a 16th, increase
-         * the stem end of the dotted eighth.
-         */
-        if (firstStem.getDuration() == NoteDuration.DottedEighth &&
-                lastStem.getDuration() == NoteDuration.Sixteenth) {
-            if (firstStem.getDirection() == Stem.Up) {
-                firstStem.setEnd(firstStem.getEnd().Add(2));
-            } else {
-                firstStem.setEnd(firstStem.getEnd().Add(-2));
-            }
-        }
-
-        /* Bring the stem ends closer together */
-        int distance = Math.abs(firstStem.getEnd().Dist(lastStem.getEnd()));
-        if (firstStem.getDirection() == Stem.Up) {
-            if (WhiteNote.Max(firstStem.getEnd(), lastStem.getEnd()) == firstStem.getEnd())
-                lastStem.setEnd(lastStem.getEnd().Add(distance / 2));
-            else
-                firstStem.setEnd(firstStem.getEnd().Add(distance / 2));
-        } else {
-            if (WhiteNote.Min(firstStem.getEnd(), lastStem.getEnd()) == firstStem.getEnd())
-                lastStem.setEnd(lastStem.getEnd().Add(-distance / 2));
-            else
-                firstStem.setEnd(firstStem.getEnd().Add(-distance / 2));
-        }
-    }
-
-    /**
-     * We're connecting the stems of three or more chords using a horizontal beam.
-     * Adjust the vertical endpoint of the stems, so that the middle chord stems
-     * are vertically in between the first and last stem.
-     */
-    static void
-    LineUpStemEnds(ChordSymbol[] chords) {
-        Stem firstStem = chords[0].getStem();
-        Stem lastStem = chords[chords.length - 1].getStem();
-        Stem middleStem = chords[1].getStem();
-
-        if (firstStem.getDirection() == Stem.Up) {
-            /* Find the highest stem. The beam will either:
-             * - Slant downwards (first stem is highest)
-             * - Slant upwards (last stem is highest)
-             * - Be straight (middle stem is highest)
-             */
-            WhiteNote top = firstStem.getEnd();
-            for (ChordSymbol chord : chords) {
-                top = WhiteNote.Max(top, chord.getStem().getEnd());
-            }
-            if (top == firstStem.getEnd() && top.Dist(lastStem.getEnd()) >= 2) {
-                firstStem.setEnd(top);
-                middleStem.setEnd(top.Add(-1));
-                lastStem.setEnd(top.Add(-2));
-            } else if (top == lastStem.getEnd() && top.Dist(firstStem.getEnd()) >= 2) {
-                firstStem.setEnd(top.Add(-2));
-                middleStem.setEnd(top.Add(-1));
-                lastStem.setEnd(top);
-            } else {
-                firstStem.setEnd(top);
-                middleStem.setEnd(top);
-                lastStem.setEnd(top);
-            }
-        } else {
-            /* Find the bottommost stem. The beam will either:
-             * - Slant upwards (first stem is lowest)
-             * - Slant downwards (last stem is lowest)
-             * - Be straight (middle stem is highest)
-             */
-            WhiteNote bottom = firstStem.getEnd();
-            for (ChordSymbol chord : chords) {
-                bottom = WhiteNote.Min(bottom, chord.getStem().getEnd());
-            }
-
-            if (bottom == firstStem.getEnd() && lastStem.getEnd().Dist(bottom) >= 2) {
-                middleStem.setEnd(bottom.Add(1));
-                lastStem.setEnd(bottom.Add(2));
-            } else if (bottom == lastStem.getEnd() && firstStem.getEnd().Dist(bottom) >= 2) {
-                middleStem.setEnd(bottom.Add(1));
-                firstStem.setEnd(bottom.Add(2));
-            } else {
-                firstStem.setEnd(bottom);
-                middleStem.setEnd(bottom);
-                lastStem.setEnd(bottom);
-            }
-        }
-
-        /* All middle stems have the same end */
-        for (int i = 1; i < chords.length - 1; i++) {
-            Stem stem = chords[i].getStem();
-            stem.setEnd(middleStem.getEnd());
-        }
-    }
-
 
     @Override
     public String toString() {

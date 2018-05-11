@@ -1,4 +1,7 @@
 apply plugin: 'com.android.library'
+//bintray-release 插件 把库上传到jcenter的相关配置
+apply plugin: 'com.novoda.bintray-release'
+
 
 android {
     compileSdkVersion 26
@@ -22,6 +25,11 @@ android {
         }
     }
 
+    //忽略代码不符合规范，导致lint检查时报错，中断整个编译过程。
+    lintOptions {
+        abortOnError false
+    }
+
 }
 
 dependencies {
@@ -32,3 +40,15 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 }
+
+
+//bintray-release 插件 把库上传到jcenter的相关配置。
+publish {
+    userOrg = 'yinzihaoos'//bintray.com用户名
+    groupId = 'com.yinzihao'//jcenter上的路径
+    artifactId = 'MidiMusicBook'//项目名称
+    publishVersion = '0.6.0'//版本号
+    desc = '一个将midi文件绘制成五线谱的库'//描述，不重要
+    website = 'https://github.com/YinZiHao1994/YinLayout.git'//网站，不重要；尽量模拟github上的地址，例如我这样的；当然你有地址最好了
+}
+

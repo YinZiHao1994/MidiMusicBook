@@ -17,7 +17,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Point;
+import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -26,6 +26,7 @@ import android.view.SurfaceView;
 
 import java.util.ArrayList;
 
+import yin.source.com.midimusicbook.R;
 import yin.source.com.midimusicbook.midi.baseBean.MidiFile;
 import yin.source.com.midimusicbook.midi.baseBean.MidiNote;
 import yin.source.com.midimusicbook.midi.baseBean.MidiOptions;
@@ -45,7 +46,9 @@ import yin.source.com.midimusicbook.midi.baseBean.MidiTrack;
  * ShadeNotes() - Shade notes on the piano that occur at a given pulse time.
  */
 public class Piano extends SurfaceView implements SurfaceHolder.Callback, MidiPlayer.MidiPlayerCallback {
+    //每个八度音阶的白键个数
     public static final int KeysPerOctave = 7;
+    //八度音阶数
     public static final int MaxOctave = 6;
 
     private static int WhiteKeyWidth;
@@ -79,7 +82,7 @@ public class Piano extends SurfaceView implements SurfaceHolder.Callback, MidiPl
      */
 
     /* The colors for drawing black/gray lines */
-    private int gray1, gray2, gray3, shade1, shade2;
+    private int colorDarkGray, colorGray, colorLightGray, colorLeftHandShade, colorRightHandShade;
 
     private boolean useTwoColors;
     /**
@@ -137,34 +140,18 @@ public class Piano extends SurfaceView implements SurfaceHolder.Callback, MidiPl
         paint = new Paint();
         paint.setTextSize(10.0f);
         paint.setAntiAlias(false);
-        gray1 = Color.rgb(16, 16, 16);
-        gray2 = Color.rgb(90, 90, 90);
-        gray3 = Color.rgb(200, 200, 200);
-        shade1 = Color.rgb(210, 205, 220);
-        shade2 = Color.rgb(150, 200, 220);
+
+        colorDarkGray = ContextCompat.getColor(context, R.color.dark_gray);
+        colorGray = ContextCompat.getColor(context, R.color.gray);
+        colorLightGray = ContextCompat.getColor(context, R.color.light_gray);
+        colorLeftHandShade = ContextCompat.getColor(context, R.color.left_hand_shade_color);
+        colorRightHandShade = ContextCompat.getColor(context, R.color.right_hand_shade_color);
         showNoteLetters = MidiOptions.NoteNameNone;
 
         SurfaceHolder holder = getHolder();
         holder.addCallback(this);
     }
 
-    /**
-     * Get the preferreed width/height, given the screen width/height
-     */
-    public static Point getPreferredSize(int screenwidth, int screenheight) {
-        int keywidth = (int) (screenwidth / (2.0 + KeysPerOctave * MaxOctave));
-        if (keywidth % 2 != 0) {
-            keywidth--;
-        }
-        //int margin = keywidth/2;
-        int margin = 0;
-        int border = keywidth / 2;
-
-        Point result = new Point();
-        result.x = margin * 2 + border * 2 + keywidth * KeysPerOctave * MaxOctave;
-        result.y = margin * 2 + border * 3 + WhiteKeyHeight;
-        return result;
-    }
 
     /**
      * Set the measured width and height
@@ -174,17 +161,27 @@ public class Piano extends SurfaceView implements SurfaceHolder.Callback, MidiPl
         super.onMeasure(widthspec, heightspec);
         int screenwidth = MeasureSpec.getSize(widthspec);
         int screenheight = MeasureSpec.getSize(heightspec);
-        WhiteKeyWidth = (int) (screenwidth / (2.0 + KeysPerOctave * MaxOctave));
-        if (WhiteKeyWidth % 2 != 0)
-            WhiteKeyWidth--;
-
-        // margin = WhiteKeyWidth/2;
         margin = 0;
-        BlackBorder = WhiteKeyWidth / 2;
+
+        WhiteKeyWidth = (screenwidth - margin * 2) / (1 + KeysPerOctave * MaxOctave);
+        int totalWhiteKeyWith = WhiteKeyWidth * KeysPerOctave * MaxOctave;
+
+        //左右黑边宽度
+        BlackBorder = (screenwidth - totalWhiteKeyWith) / 2;
         WhiteKeyHeight = WhiteKeyWidth * 5;
         BlackKeyWidth = WhiteKeyWidth / 2;
         BlackKeyHeight = WhiteKeyHeight * 5 / 9;
 
+
+        int width = margin * 2 + BlackBorder * 2 + totalWhiteKeyWith;
+        int height = margin * 2 + BlackBorder * 3 + WhiteKeyHeight;
+        setMeasuredDimension(width, height);
+    }
+
+
+    @Override
+    protected void onSizeChanged(int newwidth, int newheight, int oldwidth, int oldheight) {
+        super.onSizeChanged(newwidth, newheight, oldwidth, oldheight);
         blackKeyOffsets = new int[]{
                 WhiteKeyWidth - BlackKeyWidth / 2 - 1,
                 WhiteKeyWidth + BlackKeyWidth / 2 - 1,
@@ -197,19 +194,8 @@ public class Piano extends SurfaceView implements SurfaceHolder.Callback, MidiPl
                 6 * WhiteKeyWidth - BlackKeyWidth / 2,
                 6 * WhiteKeyWidth + BlackKeyWidth / 2
         };
-
-        int width = margin * 2 + BlackBorder * 2 + WhiteKeyWidth * KeysPerOctave * MaxOctave;
-        int height = margin * 2 + BlackBorder * 3 + WhiteKeyHeight;
-        setMeasuredDimension(width, height);
-    }
-
-
-    @Override
-    protected void onSizeChanged(int newwidth, int newheight, int oldwidth, int oldheight) {
-        super.onSizeChanged(newwidth, newheight, oldwidth, oldheight);
         bufferBitmap = Bitmap.createBitmap(newwidth, newheight, Bitmap.Config.ARGB_8888);
         bufferCanvas = new Canvas(bufferBitmap);
-        invalidate();
     }
 
     /**
@@ -253,15 +239,14 @@ public class Piano extends SurfaceView implements SurfaceHolder.Callback, MidiPl
             useTwoColors = true;
         }
         showNoteLetters = options.showNoteLetters;
-        this.invalidate();
     }
 
     /**
      * Set the colors to use for shading
      */
     public void SetShadeColors(int c1, int c2) {
-        shade1 = c1;
-        shade2 = c2;
+        colorLeftHandShade = c1;
+        colorRightHandShade = c2;
     }
 
     /**
@@ -271,19 +256,19 @@ public class Piano extends SurfaceView implements SurfaceHolder.Callback, MidiPl
         int right = WhiteKeyWidth * KeysPerOctave;
 
         // Draw the bounding rectangle, from C to B
-        paint.setColor(gray1);
+        paint.setColor(colorDarkGray);
         canvas.drawLine(0, 0, 0, WhiteKeyHeight, paint);
         canvas.drawLine(right, 0, right, WhiteKeyHeight, paint);
         // canvas.drawLine(0, 0, right, 0, paint);
         canvas.drawLine(0, WhiteKeyHeight, right, WhiteKeyHeight, paint);
-        paint.setColor(gray3);
+        paint.setColor(colorLightGray);
         canvas.drawLine(right - 1, 0, right - 1, WhiteKeyHeight, paint);
         canvas.drawLine(1, 0, 1, WhiteKeyHeight, paint);
 
         // Draw the line between E and F
-        paint.setColor(gray1);
+        paint.setColor(colorDarkGray);
         canvas.drawLine(3 * WhiteKeyWidth, 0, 3 * WhiteKeyWidth, WhiteKeyHeight, paint);
-        paint.setColor(gray3);
+        paint.setColor(colorLightGray);
         canvas.drawLine(3 * WhiteKeyWidth - 1, 0, 3 * WhiteKeyWidth - 1, WhiteKeyHeight, paint);
         canvas.drawLine(3 * WhiteKeyWidth + 1, 0, 3 * WhiteKeyWidth + 1, WhiteKeyHeight, paint);
 
@@ -292,15 +277,15 @@ public class Piano extends SurfaceView implements SurfaceHolder.Callback, MidiPl
             int x1 = blackKeyOffsets[i];
             int x2 = blackKeyOffsets[i + 1];
 
-            paint.setColor(gray1);
+            paint.setColor(colorDarkGray);
             canvas.drawLine(x1, 0, x1, BlackKeyHeight, paint);
             canvas.drawLine(x2, 0, x2, BlackKeyHeight, paint);
             canvas.drawLine(x1, BlackKeyHeight, x2, BlackKeyHeight, paint);
-            paint.setColor(gray2);
+            paint.setColor(colorGray);
             canvas.drawLine(x1 - 1, 0, x1 - 1, BlackKeyHeight + 1, paint);
             canvas.drawLine(x2 + 1, 0, x2 + 1, BlackKeyHeight + 1, paint);
             canvas.drawLine(x1 - 1, BlackKeyHeight + 1, x2 + 1, BlackKeyHeight + 1, paint);
-            paint.setColor(gray3);
+            paint.setColor(colorLightGray);
             canvas.drawLine(x1 - 2, 0, x1 - 2, BlackKeyHeight + 2, paint);
             canvas.drawLine(x2 + 2, 0, x2 + 2, BlackKeyHeight + 2, paint);
             canvas.drawLine(x1 - 2, BlackKeyHeight + 2, x2 + 2, BlackKeyHeight + 2, paint);
@@ -311,13 +296,13 @@ public class Piano extends SurfaceView implements SurfaceHolder.Callback, MidiPl
             if (i == 3) {
                 continue;  // we draw the line between E and F above
             }
-            paint.setColor(gray1);
+            paint.setColor(colorDarkGray);
             canvas.drawLine(i * WhiteKeyWidth, BlackKeyHeight, i * WhiteKeyWidth,
                     WhiteKeyHeight, paint);
-            paint.setColor(gray2);
+            paint.setColor(colorGray);
             canvas.drawLine(i * WhiteKeyWidth - 1, BlackKeyHeight + 1, i * WhiteKeyWidth - 1,
                     WhiteKeyHeight, paint);
-            paint.setColor(gray3);
+            paint.setColor(colorLightGray);
             canvas.drawLine(i * WhiteKeyWidth + 1, BlackKeyHeight + 1, i * WhiteKeyWidth + 1,
                     WhiteKeyHeight, paint);
         }
@@ -343,9 +328,9 @@ public class Piano extends SurfaceView implements SurfaceHolder.Callback, MidiPl
             for (int i = 0; i < 10; i += 2) {
                 int x1 = blackKeyOffsets[i];
                 int x2 = blackKeyOffsets[i + 1];
-                paint.setColor(gray1);
+                paint.setColor(colorDarkGray);
                 canvas.drawRect(x1, 0, x1 + BlackKeyWidth, BlackKeyHeight, paint);
-                paint.setColor(gray2);
+                paint.setColor(colorGray);
                 canvas.drawRect(x1 + 1, BlackKeyHeight - BlackKeyHeight / 8,
                         x1 + 1 + BlackKeyWidth - 2,
                         BlackKeyHeight - BlackKeyHeight / 8 + BlackKeyHeight / 8,
@@ -362,7 +347,7 @@ public class Piano extends SurfaceView implements SurfaceHolder.Callback, MidiPl
     private void DrawBlackBorder(Canvas canvas) {
         int PianoWidth = WhiteKeyWidth * KeysPerOctave * MaxOctave;
         paint.setStyle(Paint.Style.FILL);
-        paint.setColor(gray1);
+        paint.setColor(colorDarkGray);
         canvas.drawRect(margin, margin, margin + PianoWidth + BlackBorder * 2,
                 margin + BlackBorder - 2, paint);
         canvas.drawRect(margin, margin, margin + BlackBorder,
@@ -374,7 +359,7 @@ public class Piano extends SurfaceView implements SurfaceHolder.Callback, MidiPl
                 margin + BlackBorder + PianoWidth + BlackBorder,
                 margin + WhiteKeyHeight + BlackBorder * 3, paint);
 
-        paint.setColor(gray2);
+        paint.setColor(colorGray);
         canvas.drawLine(margin + BlackBorder, margin + BlackBorder - 1,
                 margin + BlackBorder + PianoWidth,
                 margin + BlackBorder - 1, paint);
@@ -423,7 +408,7 @@ public class Piano extends SurfaceView implements SurfaceHolder.Callback, MidiPl
      * Obtain the drawing canvas and call onDraw()
      * 获取画板并调用onDraw方法
      */
-    void draw() {
+    private void draw() {
         if (!surfaceReady) {
             return;
         }
@@ -446,7 +431,7 @@ public class Piano extends SurfaceView implements SurfaceHolder.Callback, MidiPl
         bufferCanvas.drawRect(0, 0, 0 + WhiteKeyWidth * KeysPerOctave * MaxOctave,
                 WhiteKeyHeight, paint);
         paint.setStyle(Paint.Style.STROKE);
-        paint.setColor(gray1);
+        paint.setColor(colorDarkGray);
         DrawBlackKeys(bufferCanvas);
         DrawOutline(bufferCanvas);
         bufferCanvas.translate(-(margin + BlackBorder), -(margin + BlackBorder));
@@ -491,8 +476,8 @@ public class Piano extends SurfaceView implements SurfaceHolder.Callback, MidiPl
                 x1 = blackKeyOffsets[0];
                 x2 = blackKeyOffsets[1];
                 canvas.drawRect(x1, 0, x1 + x2 - x1, 0 + BlackKeyHeight, paint);
-                if (color == gray1) {
-                    paint.setColor(gray2);
+                if (color == colorDarkGray) {
+                    paint.setColor(colorGray);
                     canvas.drawRect(x1 + 1, BlackKeyHeight - BlackKeyHeight / 8,
                             x1 + 1 + BlackKeyWidth - 2,
                             BlackKeyHeight - BlackKeyHeight / 8 + BlackKeyHeight / 8,
@@ -511,8 +496,8 @@ public class Piano extends SurfaceView implements SurfaceHolder.Callback, MidiPl
                 x1 = blackKeyOffsets[2];
                 x2 = blackKeyOffsets[3];
                 canvas.drawRect(x1, 0, x1 + BlackKeyWidth, 0 + BlackKeyHeight, paint);
-                if (color == gray1) {
-                    paint.setColor(gray2);
+                if (color == colorDarkGray) {
+                    paint.setColor(colorGray);
                     canvas.drawRect(x1 + 1, BlackKeyHeight - BlackKeyHeight / 8,
                             x1 + 1 + BlackKeyWidth - 2,
                             BlackKeyHeight - BlackKeyHeight / 8 + BlackKeyHeight / 8,
@@ -539,8 +524,8 @@ public class Piano extends SurfaceView implements SurfaceHolder.Callback, MidiPl
                 x1 = blackKeyOffsets[4];
                 x2 = blackKeyOffsets[5];
                 canvas.drawRect(x1, 0, x1 + BlackKeyWidth, 0 + BlackKeyHeight, paint);
-                if (color == gray1) {
-                    paint.setColor(gray2);
+                if (color == colorDarkGray) {
+                    paint.setColor(colorGray);
                     canvas.drawRect(x1 + 1, BlackKeyHeight - BlackKeyHeight / 8,
                             x1 + 1 + BlackKeyWidth - 2,
                             BlackKeyHeight - BlackKeyHeight / 8 + BlackKeyHeight / 8,
@@ -559,8 +544,8 @@ public class Piano extends SurfaceView implements SurfaceHolder.Callback, MidiPl
                 x1 = blackKeyOffsets[6];
                 x2 = blackKeyOffsets[7];
                 canvas.drawRect(x1, 0, x1 + BlackKeyWidth, 0 + BlackKeyHeight, paint);
-                if (color == gray1) {
-                    paint.setColor(gray2);
+                if (color == colorDarkGray) {
+                    paint.setColor(colorGray);
                     canvas.drawRect(x1 + 1, BlackKeyHeight - BlackKeyHeight / 8,
                             x1 + 1 + BlackKeyWidth - 2,
                             BlackKeyHeight - BlackKeyHeight / 8 + BlackKeyHeight / 8,
@@ -579,8 +564,8 @@ public class Piano extends SurfaceView implements SurfaceHolder.Callback, MidiPl
                 x1 = blackKeyOffsets[8];
                 x2 = blackKeyOffsets[9];
                 canvas.drawRect(x1, 0, x1 + BlackKeyWidth, 0 + BlackKeyHeight, paint);
-                if (color == gray1) {
-                    paint.setColor(gray2);
+                if (color == colorDarkGray) {
+                    paint.setColor(colorGray);
                     canvas.drawRect(x1 + 1, BlackKeyHeight - BlackKeyHeight / 8,
                             x1 + 1 + BlackKeyWidth - 2,
                             BlackKeyHeight - BlackKeyHeight / 8 + BlackKeyHeight / 8,
@@ -720,16 +705,16 @@ public class Piano extends SurfaceView implements SurfaceHolder.Callback, MidiPl
             if ((start <= currentPulseTime) && (currentPulseTime < end)) {
                 if (useTwoColors) {
                     if (notes.get(i).getChannel() == 1) {
-                        ShadeOneNote(bufferCanvas, notenumber, shade2);
+                        ShadeOneNote(bufferCanvas, notenumber, colorRightHandShade);
                         if (mPianoListener != null)
                             mPianoListener.pianoKey(notenumber, 1);
                     } else {
-                        ShadeOneNote(bufferCanvas, notenumber, shade1);
+                        ShadeOneNote(bufferCanvas, notenumber, colorLeftHandShade);
                         if (mPianoListener != null)
                             mPianoListener.pianoKey(notenumber, 2);
                     }
                 } else {
-                    ShadeOneNote(bufferCanvas, notenumber, shade1);
+                    ShadeOneNote(bufferCanvas, notenumber, colorLeftHandShade);
                 }
             }
 
@@ -737,7 +722,7 @@ public class Piano extends SurfaceView implements SurfaceHolder.Callback, MidiPl
             else if ((start <= prevPulseTime) && (prevPulseTime < end)) {
                 int num = notenumber % 12;
                 if (num == 1 || num == 3 || num == 6 || num == 8 || num == 10) {
-                    ShadeOneNote(bufferCanvas, notenumber, gray1);
+                    ShadeOneNote(bufferCanvas, notenumber, colorDarkGray);
                 } else {
                     ShadeOneNote(bufferCanvas, notenumber, Color.WHITE);
                 }
@@ -787,11 +772,6 @@ public class Piano extends SurfaceView implements SurfaceHolder.Callback, MidiPl
 
     public void setPianoListener(PianoListener pianoListener) {
         mPianoListener = pianoListener;
-    }
-
-    @Override
-    public void onSettingMenuButtonClick() {
-
     }
 
     @Override

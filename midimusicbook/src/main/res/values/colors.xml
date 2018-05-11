@@ -6,4 +6,12 @@
 
 
     <color name="red">#FF4081</color>
+    <color name="dark_gray">#101010</color>
+    <color name="gray">#5A5A5A</color>
+    <color name="light_gray">#C8C8C8</color>
+
+
+
+    <color name="left_hand_shade_color">#D2CDDC</color>
+    <color name="right_hand_shade_color">#96C8DC</color>
 </resources>

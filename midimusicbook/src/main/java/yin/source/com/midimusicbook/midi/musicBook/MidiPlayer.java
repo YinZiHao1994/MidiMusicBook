@@ -681,7 +681,6 @@ public class MidiPlayer implements MidiPlayController {
     }
 
     public interface MidiPlayerCallback {
-        void onSettingMenuButtonClick();
 
 //        void onPlayerStop();
 

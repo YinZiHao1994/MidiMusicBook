@@ -325,12 +325,12 @@ public class SettingsActivity extends PreferenceActivity
     /* Create the "Left-hand color" and "Right-hand color" preferences */
     private void createColorPrefs(PreferenceScreen root) {
         shade1Color = new ColorPreference(this);
-        shade1Color.setColor(options.shade1Color);
+        shade1Color.setColor(options.colorRightHandShade);
         shade1Color.setTitle(R.string.right_hand_color);
         root.addPreference(shade1Color);
 
         shade2Color = new ColorPreference(this);
-        shade2Color.setColor(options.shade2Color);
+        shade2Color.setColor(options.colorLeftHandShade);
         shade2Color.setTitle(R.string.left_hand_color);
         root.addPreference(shade2Color);
     }
@@ -423,8 +423,8 @@ public class SettingsActivity extends PreferenceActivity
                                              options.defaultTime.getTempo());
         }
         options.combineInterval = Integer.parseInt(combineInterval.getValue());
-        options.shade1Color = shade1Color.getColor();
-        options.shade2Color = shade2Color.getColor();
+        options.colorRightHandShade = shade1Color.getColor();
+        options.colorLeftHandShade = shade2Color.getColor();
         options.showMeasures = showMeasures.isChecked();
         options.playMeasuresInLoop = playMeasuresInLoop.isChecked();
         options.playMeasuresInLoopStart = Integer.parseInt(loopStart.getValue()) - 1;

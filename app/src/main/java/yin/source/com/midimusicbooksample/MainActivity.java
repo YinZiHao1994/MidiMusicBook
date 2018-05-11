@@ -149,8 +149,8 @@ public class MainActivity extends AppCompatActivity {
         midiCRC = crc.getValue();
         SharedPreferences settings = getPreferences(0);
         options.scrollVert = settings.getBoolean("scrollVert", false);
-        options.shade1Color = settings.getInt("shade1Color", options.shade1Color);
-        options.shade2Color = settings.getInt("shade2Color", options.shade2Color);
+        options.colorRightHandShade = settings.getInt("colorRightHandShade", options.colorRightHandShade);
+        options.colorLeftHandShade = settings.getInt("colorLeftHandShade", options.colorLeftHandShade);
         options.showPiano = settings.getBoolean("showPiano", true);
         options.scrollVert = true;
         String json = settings.getString("" + midiCRC, null);
@@ -247,7 +247,7 @@ public class MainActivity extends AppCompatActivity {
         sheet.init(midifile, options);
         sheet.setPlayer(player);
         piano.SetMidiFile(midifile, options, player);
-        piano.SetShadeColors(options.shade1Color, options.shade2Color);
+        piano.SetShadeColors( options.colorLeftHandShade,options.colorRightHandShade);
         player.SetMidiFile(midifile, options);
         sheet.callOnDraw();
     }
@@ -425,8 +425,8 @@ public class MainActivity extends AppCompatActivity {
         // Save the options.
         SharedPreferences.Editor editor = getPreferences(0).edit();
         editor.putBoolean("scrollVert", options.scrollVert);
-        editor.putInt("shade1Color", options.shade1Color);
-        editor.putInt("shade2Color", options.shade2Color);
+        editor.putInt("colorRightHandShade", options.colorRightHandShade);
+        editor.putInt("colorLeftHandShade", options.colorLeftHandShade);
         editor.putBoolean("showPiano", options.showPiano);
         String json = options.toJson();
         if (json != null) {

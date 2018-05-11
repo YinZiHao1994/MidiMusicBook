@@ -89,11 +89,11 @@ public class MidiOptions implements Serializable {
     /**
      * Combine notes within given time interval (msec)
      */ // 根据提供的节奏(拍子)间隔合并音符
-    public int shade1Color;
+    public int colorRightHandShade;
     /**
      * The color to use for shading
      */ // 右手阴影颜色
-    public int shade2Color;
+    public int colorLeftHandShade;
     /**
      * The color to use for shading the left hand piano
      */ // 左手阴影颜色
@@ -166,8 +166,8 @@ public class MidiOptions implements Serializable {
         defaultTime = midifile.getTime();// 默认的拍子记号(分子、分母、节拍数)
         key = -1;// 使用提供的键拍号(音符音阶)
         combineInterval = 40;// 根据提供的节奏(拍子)间隔合并音符
-        shade1Color = Color.rgb(210, 205, 220);
-        shade2Color = Color.rgb(150, 200, 220);
+        colorRightHandShade = Color.rgb(210, 205, 220);
+        colorLeftHandShade = Color.rgb(150, 200, 220);
 
 
         tempo = midifile.getTime().getTempo();// 每四分之一节拍的微秒数
@@ -216,8 +216,8 @@ public class MidiOptions implements Serializable {
             json.put("transpose", transpose);
             json.put("key", key);
             json.put("combineInterval", combineInterval);
-            json.put("shade1Color", shade1Color);
-            json.put("shade2Color", shade2Color);
+            json.put("colorRightHandShade", colorRightHandShade);
+            json.put("colorLeftHandShade", colorLeftHandShade);
             json.put("showMeasures", showMeasures);
             json.put("playMeasuresInLoop", playMeasuresInLoop);
             json.put("playMeasuresInLoopStart", playMeasuresInLoopStart);
@@ -275,8 +275,8 @@ public class MidiOptions implements Serializable {
             options.transpose = json.getInt("transpose");
             options.key = json.getInt("key");
             options.combineInterval = json.getInt("combineInterval");
-            options.shade1Color = json.getInt("shade1Color");
-            options.shade2Color = json.getInt("shade2Color");
+            options.colorRightHandShade = json.getInt("colorRightHandShade");
+            options.colorLeftHandShade = json.getInt("colorLeftHandShade");
             options.showMeasures = json.getBoolean("showMeasures");
             options.playMeasuresInLoop = json.getBoolean("playMeasuresInLoop");
             options.playMeasuresInLoopStart = json.getInt("playMeasuresInLoopStart");
@@ -322,8 +322,8 @@ public class MidiOptions implements Serializable {
         transpose = saved.transpose;
         key = saved.key;
         combineInterval = saved.combineInterval;
-        shade1Color = saved.shade1Color;
-        shade2Color = saved.shade2Color;
+        colorRightHandShade = saved.colorRightHandShade;
+        colorLeftHandShade = saved.colorLeftHandShade;
         showMeasures = saved.showMeasures;
         playMeasuresInLoop = saved.playMeasuresInLoop;
         playMeasuresInLoopStart = saved.playMeasuresInLoopStart;
@@ -379,8 +379,8 @@ public class MidiOptions implements Serializable {
         options.transpose = transpose;
         options.key = key;
         options.combineInterval = combineInterval;
-        options.shade1Color = shade1Color;
-        options.shade2Color = shade2Color;
+        options.colorRightHandShade = colorRightHandShade;
+        options.colorLeftHandShade = colorLeftHandShade;
         options.showMeasures = showMeasures;
         options.playMeasuresInLoop = playMeasuresInLoop;
         options.playMeasuresInLoopStart = playMeasuresInLoopStart;
