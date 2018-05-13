@@ -43,7 +43,7 @@ import yin.source.com.midimusicbook.midi.musicBook.ColorPreference;
  *  - Change how notes are combined into chords (the time interval)
  *  - Change the colors for shading the left/right hands.
  *  - Whether to display measure numbers
- *  - Play selected measures in a loop
+ *  - play selected measures in a loop
  * 
  * When created, pass an Intent parameter containing MidiOptions.
  * When destroyed, this activity passes the result MidiOptions to the Intent.
@@ -76,7 +76,7 @@ public class SettingsActivity extends PreferenceActivity
     private ColorPreference shade1Color;          /** Right-hand color */
     private ColorPreference shade2Color;          /** Left-hand color */
 
-    /** Play the measures from start to end in a loop */
+    /** play the measures from start to end in a loop */
     private CheckBoxPreference playMeasuresInLoop;
     private ListPreference loopStart;
     private ListPreference loopEnd;
@@ -336,7 +336,7 @@ public class SettingsActivity extends PreferenceActivity
     }
 
 
-    /** Create the "Play Measures in a Loop" preference.
+    /** Create the "play Measures in a Loop" preference.
      *
      *  Note that we display the measure numbers starting at 1, 
      *  but the actual playMeasuresInLoopStart field starts at 0.

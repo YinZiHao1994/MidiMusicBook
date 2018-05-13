@@ -44,7 +44,8 @@ public class ClefSymbol implements MusicSymbol {
      * Create a new ClefSymbol, with the given clef, starttime, and size
      * 根据提供的谱号，开始时间和尺寸创建一个新的ClefSymbol对象
      */
-    public ClefSymbol(Clef clef, int starttime, boolean small) {
+    public ClefSymbol(Context context, Clef clef, int starttime, boolean small) {
+        LoadImages(context);
         this.clef = clef;
         this.starttime = starttime;
         smallsize = small;

@@ -56,7 +56,8 @@ public class TimeSigSymbol implements MusicSymbol {
      * Create a new TimeSigSymbol
      * 创建一个TimeSigSymbol
      */
-    public TimeSigSymbol(int numer, int denom) {
+    public TimeSigSymbol(Context context, int numer, int denom) {
+        LoadImages(context);
         numerator = numer;// 分子
         denominator = denom;// 分母
         if (numer >= 0 && numer < images.length && images[numer] != null &&

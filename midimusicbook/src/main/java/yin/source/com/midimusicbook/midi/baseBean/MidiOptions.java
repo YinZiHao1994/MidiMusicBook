@@ -113,7 +113,7 @@ public class MidiOptions implements Serializable {
 
     public boolean playMeasuresInLoop;
     /**
-     * Play the selected measures in a loop
+     * play the selected measures in a loop
      */ // 循环播放选中的拍子(小节)
     public int playMeasuresInLoopStart;
     /**

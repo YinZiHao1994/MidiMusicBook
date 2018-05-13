@@ -764,7 +764,7 @@ public class Piano extends SurfaceView implements SurfaceHolder.Callback, MidiPl
     public boolean onTouchEvent(MotionEvent event) {
         if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
             if (player != null) {
-                player.Pause();
+                player.pause();
             }
         }
         return super.onTouchEvent(event);

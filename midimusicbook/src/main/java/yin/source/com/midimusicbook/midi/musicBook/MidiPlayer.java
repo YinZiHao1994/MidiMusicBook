@@ -36,7 +36,7 @@ import yin.source.com.midimusicbook.midi.baseBean.MidiOptions;
  * The MidiPlayer is the panel at the top used to play the sound of the
  * midi file. It consists of:
  * <p/>
- * - The Rewind button - The Play/Pause button - The Stop button - The
+ * - The Rewind button - The play/pause button - The stop button - The
  * Fast Forward button - The Playback speed bar
  * <p/>
  * The sound of the midi file depends on - The MidiOptions (taken from
@@ -208,7 +208,7 @@ public class MidiPlayer implements MidiPlayController {
                     }
                 }
 
-                /* Stop if we've reached the end of the song */
+                /* stop if we've reached the end of the song */
                 if (currentPulseTime > midifile.getTotalPulses()) {
                     DoStop();
                     return;
@@ -268,7 +268,7 @@ public class MidiPlayer implements MidiPlayController {
     }
 
     /**
-     * The MidiFile and/or SheetMusic has changed. Stop any playback sound, and
+     * The MidiFile and/or SheetMusic has changed. stop any playback sound, and
      * store the current midifile and sheet music.
      */
     public void SetMidiFile(MidiFile file, MidiOptions opt) {
@@ -296,7 +296,7 @@ public class MidiPlayer implements MidiPlayController {
             timer.removeCallbacks(TimerCallback);
             timer.postDelayed(ReShade, 500);
         } else {
-            Stop();
+            stop();
             midifile = file;
             options = opt;
         }
@@ -376,7 +376,7 @@ public class MidiPlayer implements MidiPlayController {
     }
 
     /**
-     * Play the sound for the given MIDI file
+     * play the sound for the given MIDI file
      */
     private void PlaySound(String filename) {
         if (player == null)
@@ -396,7 +396,7 @@ public class MidiPlayer implements MidiPlayController {
     }
 
     /**
-     * Stop playing the MIDI music
+     * stop playing the MIDI music
      */
     private void StopSound() {
         if (player == null)
@@ -409,7 +409,7 @@ public class MidiPlayer implements MidiPlayController {
      * The callback for the play button. If we're stopped or pause, then play
      * the midi file.
      */
-    public void Play() {
+    public void play() {
         if (midifile == null || numberTracks() == 0) {
             return;
         } else if (playState == PlayState.INIT_STOP || playState == PlayState.INIT_PAUSE || playState == PlayState.PLAYING) {
@@ -428,7 +428,7 @@ public class MidiPlayer implements MidiPlayController {
      * The callback for pausing playback. If we're currently playing, pause the
      * music. The actual pause is done when the timer is invoked.
      */
-    public void Pause() {
+    public void pause() {
 
         if (midifile == null || numberTracks() == 0) {
             return;
@@ -439,10 +439,10 @@ public class MidiPlayer implements MidiPlayController {
     }
 
     /**
-     * The callback for the Stop button. If playing, initiate a stop and wait
+     * The callback for the stop button. If playing, initiate a stop and wait
      * for the timer to finish. Then do the actual stop.
      */
-    public void Stop() {
+    public void stop() {
         if (midifile == null || playState == PlayState.STOPPED) {
             return;
         }
@@ -605,8 +605,8 @@ public class MidiPlayer implements MidiPlayController {
     }
 
     /**
-     * The "Play Measures in a Loop" feature is enabled, and we've reached the
-     * last measure. Stop the sound, unshade the music, and then start playing
+     * The "play Measures in a Loop" feature is enabled, and we've reached the
+     * last measure. stop the sound, unshade the music, and then start playing
      * again.
      */
     private void RestartPlayMeasuresInLoop() {

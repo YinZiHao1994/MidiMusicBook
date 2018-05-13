@@ -16,10 +16,8 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -29,16 +27,12 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.zip.CRC32;
 
 import yin.source.com.midimusicbook.midi.baseBean.MidiFile;
 import yin.source.com.midimusicbook.midi.baseBean.MidiOptions;
-import yin.source.com.midimusicbook.midi.musicBook.ClefSymbol;
 import yin.source.com.midimusicbook.midi.musicBook.MidiPlayer;
 import yin.source.com.midimusicbook.midi.musicBook.Piano;
 import yin.source.com.midimusicbook.midi.musicBook.SheetMusic;
-import yin.source.com.midimusicbook.midi.musicBook.TimeSigSymbol;
-import yin.source.com.midimusicbook.utils.IOUtil;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -53,31 +47,6 @@ public class MainActivity extends AppCompatActivity {
     private SheetMusic sheet; /* The sheet music */ // 乐谱
     private MidiFile midifile; /* The midi file to play */ // 需要播放的midi文件
     private MidiOptions options; /* The options for sheet music and sound */ // 乐谱和声音的选项
-    private long midiCRC; /* CRC of the midi bytes */ // midi字节数组的循环校验码
-
-    // Layout Views
-    private ListView mConversationView;
-    private EditText mOutEditText;
-    private Button mSendButton;
-
-    // Name of the connected device
-    private String mConnectedDeviceName = null;
-    // Array adapter for the conversation thread
-    private ArrayAdapter<String> mConversationArrayAdapter;
-    // String buffer for outgoing messages
-    private StringBuffer mOutStringBuffer;
-    private String PIANOORDER =
-            "00000000000000000000" +
-                    "00000000000000000000" +
-                    "00000000000000000000" +
-                    "00000000000000000000" +
-                    "00000000000000000000" +
-                    "00000000000000000000" +
-                    "00000000000000000000" +
-                    "00000000000000000000" +
-                    "00000000";
-    private int PRELEFTPOSITION = -1;
-    private int PRERIGHTPOSITION = -1;
 
 
     private Button rewindButton;
@@ -106,6 +75,10 @@ public class MainActivity extends AppCompatActivity {
      */
     private SeekBar speedBar;
 
+    private Button btnPause;
+
+    private Button btnRestart;
+
     /**
      * Create this SheetMusicActivity. The Intent should have two parameters: -
      * data: The uri of the midi file to open. - MidiTitleID: The title of the
@@ -123,17 +96,6 @@ public class MainActivity extends AppCompatActivity {
         player = new MidiPlayer(getApplicationContext());
         piano = (Piano) findViewById(R.id.piano);
         sheet = (SheetMusic) findViewById(R.id.sheet);
-//        player.SetPiano(piano);
-        piano.setPianoListener(new Piano.PianoListener() {
-            @Override
-            public void pianoKey(int position, int channel) {
-                sendPianoMessage(position - 24, channel);
-            }
-        });
-
-
-        ClefSymbol.LoadImages(this);
-        TimeSigSymbol.LoadImages(this);
 
 
 //        File fileFromAssets = FileManagerUtils.getFileFromAssets("piano_guide.mid", this);
@@ -143,21 +105,7 @@ public class MainActivity extends AppCompatActivity {
         // Initialize the settings (MidiOptions).
         // If previous settings have been saved, used those
         options = new MidiOptions(midifile);
-        CRC32 crc = new CRC32();
-        byte[] byteDataByFile = IOUtil.getByteDataByFile(fileFromAssets);
-        crc.update(byteDataByFile);
-        midiCRC = crc.getValue();
-        SharedPreferences settings = getPreferences(0);
-        options.scrollVert = settings.getBoolean("scrollVert", false);
-        options.colorRightHandShade = settings.getInt("colorRightHandShade", options.colorRightHandShade);
-        options.colorLeftHandShade = settings.getInt("colorLeftHandShade", options.colorLeftHandShade);
-        options.showPiano = settings.getBoolean("showPiano", true);
         options.scrollVert = true;
-        String json = settings.getString("" + midiCRC, null);
-        MidiOptions savedOptions = MidiOptions.fromJson(json);
-        if (savedOptions != null) {
-            options.merge(savedOptions);
-        }
         createSheetMusic(options);
     }
 
@@ -171,7 +119,8 @@ public class MainActivity extends AppCompatActivity {
         rewindButton = (Button) findViewById(R.id.btn_rewind);
         speedBar = (SeekBar) findViewById(R.id.seek_speed);
         speedText = (TextView) findViewById(R.id.tv_speed);
-
+        btnPause = findViewById(R.id.btn_pause);
+        btnRestart = findViewById(R.id.btn_restart);
 
         rewindButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -180,12 +129,12 @@ public class MainActivity extends AppCompatActivity {
         });
         stopButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                player.Stop();
+                player.stop();
             }
         });
         playButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                player.Play();
+                player.play();
             }
         });
         fastFwdButton.setOnClickListener(new View.OnClickListener() {
@@ -196,6 +145,20 @@ public class MainActivity extends AppCompatActivity {
         settingsButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 openOptionsMenu();
+            }
+        });
+        btnPause.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                player.pause();
+            }
+        });
+
+        btnRestart.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                player.stop();
+                player.play();
             }
         });
         speedBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -211,27 +174,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-    }
-
-
-    private void sendPianoMessage(int position, int channel) {
-        Log.i("SheetMusicActivity", position + "");
-        if (channel == 1) {
-            if (PRELEFTPOSITION != -1)
-                PIANOORDER = PIANOORDER.substring(0, PRELEFTPOSITION * 2 + 1) + "0" +
-                        PIANOORDER.substring(PRELEFTPOSITION * 2 + 2);
-            PRELEFTPOSITION = position;
-            PIANOORDER = PIANOORDER.substring(0, PRELEFTPOSITION * 2 + 1) + "1" +
-                    PIANOORDER.substring(PRELEFTPOSITION * 2 + 2);
-        } else {
-            if (PRERIGHTPOSITION != -1)
-                PIANOORDER = PIANOORDER.substring(0, PRERIGHTPOSITION * 2) + "0" +
-                        PIANOORDER.substring(PRERIGHTPOSITION * 2 + 1);
-            PRERIGHTPOSITION = position;
-            PIANOORDER = PIANOORDER.substring(0, PRERIGHTPOSITION * 2) + "1" +
-                    PIANOORDER.substring(PRERIGHTPOSITION * 2 + 1);
-
-        }
     }
 
 
@@ -258,7 +200,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         if (player != null) {
-            player.Pause();
+            player.pause();
         }
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.sheet_menu, menu);
@@ -428,11 +370,7 @@ public class MainActivity extends AppCompatActivity {
         editor.putInt("colorRightHandShade", options.colorRightHandShade);
         editor.putInt("colorLeftHandShade", options.colorLeftHandShade);
         editor.putBoolean("showPiano", options.showPiano);
-        String json = options.toJson();
-        if (json != null) {
-            editor.putString("" + midiCRC, json);
-        }
-        editor.commit();
+        editor.apply();
 
         // Recreate the sheet music with the new options
         createSheetMusic(options);
@@ -452,7 +390,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         if (player != null) {
-            player.Pause();
+            player.pause();
         }
         super.onPause();
     }

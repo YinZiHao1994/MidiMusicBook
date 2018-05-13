@@ -212,6 +212,9 @@ public class SheetMusic extends SurfaceView implements SurfaceHolder.Callback, S
     private int scrollY;
     private ScrollAnimation scrollAnimation;// 滚动动画
 
+    private Context context;
+
+
     public SheetMusic(Context context) {
         this(context, null);
     }
@@ -222,6 +225,7 @@ public class SheetMusic extends SurfaceView implements SurfaceHolder.Callback, S
 
     public SheetMusic(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        this.context = context;
         SurfaceHolder holder = getHolder();
         holder.addCallback(this);
         bufferX = bufferY = scrollX = scrollY = 0;
@@ -350,8 +354,8 @@ public class SheetMusic extends SurfaceView implements SurfaceHolder.Callback, S
     /**
      * Get the width (in pixels) needed to display the key signature
      */
-    public static int KeySignatureWidth(KeySignature key) {
-        ClefSymbol clefsym = new ClefSymbol(Clef.Treble, 0, false);
+    public static int KeySignatureWidth(Context context, KeySignature key) {
+        ClefSymbol clefsym = new ClefSymbol(context, Clef.Treble, 0, false);
         int result = clefsym.getMinWidth();
         AccidSymbol[] keys = key.GetSymbols(Clef.Treble);
         for (AccidSymbol symbol : keys) {
@@ -592,10 +596,10 @@ public class SheetMusic extends SurfaceView implements SurfaceHolder.Callback, S
      */
     private ArrayList<MusicSymbol> CreateSymbols(ArrayList<ChordSymbol> chords, ClefMeasures clefs,
                                                  TimeSignature time, int lastStart) {
-        ArrayList<MusicSymbol> symbols = new ArrayList<MusicSymbol>();
-        symbols = AddBars(chords, time, lastStart);
-        symbols = AddRests(symbols, time);
-        symbols = AddClefChanges(symbols, clefs, time);
+        ArrayList<MusicSymbol> symbols = new ArrayList<>();
+        symbols = AddBars(context, chords, time, lastStart);
+        symbols = AddRests(context, symbols, time);
+        symbols = AddClefChanges(context, symbols, clefs, time);
         return symbols;
     }
 
@@ -603,10 +607,9 @@ public class SheetMusic extends SurfaceView implements SurfaceHolder.Callback, S
      * Add in the vertical bars delimiting measures.
      * Also, add the time signature symbols.
      */
-    private ArrayList<MusicSymbol>
-    AddBars(ArrayList<ChordSymbol> chords, TimeSignature time, int lastStart) {
+    private ArrayList<MusicSymbol> AddBars(Context context, ArrayList<ChordSymbol> chords, TimeSignature time, int lastStart) {
         ArrayList<MusicSymbol> symbols = new ArrayList<>();
-        TimeSigSymbol timesig = new TimeSigSymbol(time.getNumerator(), time.getDenominator());
+        TimeSigSymbol timesig = new TimeSigSymbol(this.context, time.getNumerator(), time.getDenominator());
         symbols.add(timesig);
         /* The starttime of the beginning of the measure */
         int measuretime = 0;
@@ -634,7 +637,7 @@ public class SheetMusic extends SurfaceView implements SurfaceHolder.Callback, S
      * Add rest symbols between notes.  All times below are
      * measured in pulses.
      */
-    private ArrayList<MusicSymbol> AddRests(ArrayList<MusicSymbol> symbols, TimeSignature time) {
+    private ArrayList<MusicSymbol> AddRests(Context context, ArrayList<MusicSymbol> symbols, TimeSignature time) {
         int prevtime = 0;
         ArrayList<MusicSymbol> result = new ArrayList<>(symbols.size());
         for (MusicSymbol symbol : symbols) {
@@ -706,7 +709,7 @@ public class SheetMusic extends SurfaceView implements SurfaceHolder.Callback, S
      * This function does not add the main Clef Symbol that begins each
      * staff.  That is done in the Staff() contructor.
      */
-    private ArrayList<MusicSymbol> AddClefChanges(ArrayList<MusicSymbol> symbols,
+    private ArrayList<MusicSymbol> AddClefChanges(Context context, ArrayList<MusicSymbol> symbols,
                                                   ClefMeasures clefs,
                                                   TimeSignature time) {
         ArrayList<MusicSymbol> result = new ArrayList<>(symbols.size());
@@ -716,7 +719,7 @@ public class SheetMusic extends SurfaceView implements SurfaceHolder.Callback, S
             if (symbol instanceof BarSymbol) {
                 Clef clef = clefs.GetClef(symbol.getStartTime());
                 if (clef != prevclef) {
-                    result.add(new ClefSymbol(clef, symbol.getStartTime() - 1, true));
+                    result.add(new ClefSymbol(this.context, clef, symbol.getStartTime() - 1, true));
                 }
                 prevclef = clef;
             }
@@ -806,10 +809,9 @@ public class SheetMusic extends SurfaceView implements SurfaceHolder.Callback, S
      * Each Staff has a maxmimum width of PageWidth (800 pixels).
      * Also, measures should not span multiple Staffs.
      */
-    private ArrayList<Staff>
-    CreateStaffsForTrack(ArrayList<MusicSymbol> symbols, int measurelen,
-                         KeySignature key, MidiOptions options, int track, int totaltracks) {
-        int keysigWidth = KeySignatureWidth(key);
+    private ArrayList<Staff> CreateStaffsForTrack(ArrayList<MusicSymbol> symbols, int measurelen,
+                                                  KeySignature key, MidiOptions options, int track, int totaltracks) {
+        int keysigWidth = KeySignatureWidth(context, key);
         int startindex = 0;
         ArrayList<Staff> thestaffs = new ArrayList<Staff>(symbols.size() / 50);
         while (startindex < symbols.size()) {
@@ -864,7 +866,7 @@ public class SheetMusic extends SurfaceView implements SurfaceHolder.Callback, S
             for (int i = startindex; i <= endindex; i++) {
                 staffSymbols.add(symbols.get(i));
             }
-            Staff staff = new Staff(staffSymbols, key, options, track, totaltracks);
+            Staff staff = new Staff(context, staffSymbols, key, options, track, totaltracks);
             thestaffs.add(staff);
             startindex = endindex + 1;
         }
@@ -1414,7 +1416,7 @@ public class SheetMusic extends SurfaceView implements SurfaceHolder.Callback, S
             case MotionEvent.ACTION_DOWN:
                 // If we touch while music is playing, stop the midi player 
                 if (player != null && player.getPlayState() == MidiPlayer.PlayState.PLAYING) {
-                    player.Pause();
+                    player.pause();
                     scrollAnimation.stopMotion();
                 }
                 return result;

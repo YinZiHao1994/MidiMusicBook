@@ -12,6 +12,7 @@
 
 package yin.source.com.midimusicbook.midi.musicBook;
 
+import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -109,10 +110,10 @@ public class Staff {
      * with the staffs above and below. The MidiOptions are used
      * to check whether to display measure numbers or not.
      */
-    public Staff(ArrayList<MusicSymbol> symbols, KeySignature key,
+    public Staff(Context context, ArrayList<MusicSymbol> symbols, KeySignature key,
                  MidiOptions options, int tracknum, int totaltracks) {
 
-        keysigWidth = SheetMusic.KeySignatureWidth(key);
+        keysigWidth = SheetMusic.KeySignatureWidth(context, key);
         this.tracknum = tracknum;
         this.totaltracks = totaltracks;
         showMeasures = (options.showMeasures && tracknum == 0);
@@ -123,7 +124,7 @@ public class Staff {
         }
         Clef clef = FindClef(symbols);
 
-        clefsym = new ClefSymbol(clef, 0, false);
+        clefsym = new ClefSymbol(context, clef, 0, false);
         keys = key.GetSymbols(clef);
         this.symbols = symbols;
         CalculateWidth(options.scrollVert);

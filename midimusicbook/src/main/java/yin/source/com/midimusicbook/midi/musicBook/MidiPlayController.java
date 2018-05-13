@@ -10,13 +10,13 @@ public interface MidiPlayController {
 
     void Rewind();
 
-    void Stop();
+    void stop();
 
-    void Play();
+    void play();
 
     void FastForward();
 
-    void Pause();
+    void pause();
 
     void SetMidiFile(MidiFile file, MidiOptions opt);
 
