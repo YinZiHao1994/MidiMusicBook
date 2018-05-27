@@ -111,7 +111,7 @@ public class MidiPlayer implements MidiPlayController {
 
                 if (midiPlayerCallbackList != null) {
                     for (MidiPlayerCallback midiPlayerCallback : midiPlayerCallbackList) {
-                        midiPlayerCallback.onSheetNeedShadeNotes((int) currentPulseTime, -10, SheetMusic.ImmediateScroll);
+                        midiPlayerCallback.onSheetNeedShadeNotes((int) currentPulseTime, -10, MusicBook.ImmediateScroll);
                         midiPlayerCallback.onPianoNeedShadeNotes((int) currentPulseTime, (int) prevPulseTime);
 
                     }
@@ -166,7 +166,7 @@ public class MidiPlayer implements MidiPlayController {
             if (midiPlayerCallbackList != null) {
                 for (MidiPlayerCallback midiPlayerCallback : midiPlayerCallbackList) {
 //                    midiPlayerCallback.onPlayerPlay();
-                    midiPlayerCallback.onSheetNeedShadeNotes((int) currentPulseTime, (int) prevPulseTime, SheetMusic.GradualScroll);
+                    midiPlayerCallback.onSheetNeedShadeNotes((int) currentPulseTime, (int) prevPulseTime, MusicBook.GradualScroll);
                     midiPlayerCallback.onPianoNeedShadeNotes((int) currentPulseTime, (int) prevPulseTime);
                 }
             }
@@ -215,7 +215,7 @@ public class MidiPlayer implements MidiPlayController {
                 }
                 if (midiPlayerCallbackList != null) {
                     for (MidiPlayerCallback midiPlayerCallback : midiPlayerCallbackList) {
-                        midiPlayerCallback.onSheetNeedShadeNotes((int) currentPulseTime, (int) prevPulseTime, SheetMusic.GradualScroll);
+                        midiPlayerCallback.onSheetNeedShadeNotes((int) currentPulseTime, (int) prevPulseTime, MusicBook.GradualScroll);
                         midiPlayerCallback.onPianoNeedShadeNotes((int) currentPulseTime, (int) prevPulseTime);
                     }
                 }
@@ -232,7 +232,7 @@ public class MidiPlayer implements MidiPlayController {
 
                 if (midiPlayerCallbackList != null) {
                     for (MidiPlayerCallback midiPlayerCallback : midiPlayerCallbackList) {
-                        midiPlayerCallback.onSheetNeedShadeNotes((int) currentPulseTime, (int) prevPulseTime, SheetMusic.ImmediateScroll);
+                        midiPlayerCallback.onSheetNeedShadeNotes((int) currentPulseTime, (int) prevPulseTime, MusicBook.ImmediateScroll);
                     }
                 }
 //                sheet.ShadeNotes((int) currentPulseTime, (int) prevPulseTime, SheetMusic.ImmediateScroll);
@@ -284,7 +284,7 @@ public class MidiPlayer implements MidiPlayController {
             if (midiPlayerCallbackList != null) {
                 for (MidiPlayerCallback midiPlayerCallback : midiPlayerCallbackList) {
 //                    midiPlayerCallback.onPlayerSetMidiFile();
-                    midiPlayerCallback.onSheetNeedShadeNotes((int) currentPulseTime, (int) -1, SheetMusic.DontScroll);
+                    midiPlayerCallback.onSheetNeedShadeNotes((int) currentPulseTime, (int) -1, MusicBook.DontScroll);
                 }
             }
 //            sheet.ShadeNotes((int) currentPulseTime, (int) -1, SheetMusic.DontScroll);
@@ -467,8 +467,8 @@ public class MidiPlayer implements MidiPlayController {
         if (midiPlayerCallbackList != null) {
             for (MidiPlayerCallback midiPlayerCallback : midiPlayerCallbackList) {
 //                midiPlayerCallback.onPlayerStop();
-                midiPlayerCallback.onSheetNeedShadeNotes(-10, (int) prevPulseTime, SheetMusic.DontScroll);
-                midiPlayerCallback.onSheetNeedShadeNotes(-10, (int) currentPulseTime, SheetMusic.DontScroll);
+                midiPlayerCallback.onSheetNeedShadeNotes(-10, (int) prevPulseTime, MusicBook.DontScroll);
+                midiPlayerCallback.onSheetNeedShadeNotes(-10, (int) currentPulseTime, MusicBook.DontScroll);
                 midiPlayerCallback.onPianoNeedShadeNotes(-10, (int) prevPulseTime);
                 midiPlayerCallback.onPianoNeedShadeNotes(-10, (int) currentPulseTime);
 
@@ -501,7 +501,7 @@ public class MidiPlayer implements MidiPlayController {
 
         if (midiPlayerCallbackList != null) {
             for (MidiPlayerCallback midiPlayerCallback : midiPlayerCallbackList) {
-                midiPlayerCallback.onSheetNeedShadeNotes(-10, (int) currentPulseTime, SheetMusic.DontScroll);
+                midiPlayerCallback.onSheetNeedShadeNotes(-10, (int) currentPulseTime, MusicBook.DontScroll);
                 midiPlayerCallback.onPianoNeedShadeNotes(-10, (int) currentPulseTime);
             }
         }
@@ -517,7 +517,7 @@ public class MidiPlayer implements MidiPlayController {
 
         if (midiPlayerCallbackList != null) {
             for (MidiPlayerCallback midiPlayerCallback : midiPlayerCallbackList) {
-                midiPlayerCallback.onSheetNeedShadeNotes((int) currentPulseTime, (int) prevPulseTime, SheetMusic.ImmediateScroll);
+                midiPlayerCallback.onSheetNeedShadeNotes((int) currentPulseTime, (int) prevPulseTime, MusicBook.ImmediateScroll);
                 midiPlayerCallback.onPianoNeedShadeNotes((int) currentPulseTime, (int) prevPulseTime);
             }
         }
@@ -543,7 +543,7 @@ public class MidiPlayer implements MidiPlayController {
         playState = PlayState.PAUSED;
         if (midiPlayerCallbackList != null) {
             for (MidiPlayerCallback midiPlayerCallback : midiPlayerCallbackList) {
-                midiPlayerCallback.onSheetNeedShadeNotes(-10, (int) currentPulseTime, SheetMusic.DontScroll);
+                midiPlayerCallback.onSheetNeedShadeNotes(-10, (int) currentPulseTime, MusicBook.DontScroll);
                 midiPlayerCallback.onPianoNeedShadeNotes(-10, (int) currentPulseTime);
             }
         }
@@ -558,7 +558,7 @@ public class MidiPlayer implements MidiPlayController {
         }
         if (midiPlayerCallbackList != null) {
             for (MidiPlayerCallback midiPlayerCallback : midiPlayerCallbackList) {
-                midiPlayerCallback.onSheetNeedShadeNotes((int) currentPulseTime, (int) prevPulseTime, SheetMusic.ImmediateScroll);
+                midiPlayerCallback.onSheetNeedShadeNotes((int) currentPulseTime, (int) prevPulseTime, MusicBook.ImmediateScroll);
                 midiPlayerCallback.onPianoNeedShadeNotes((int) currentPulseTime, (int) prevPulseTime);
             }
         }
@@ -581,7 +581,7 @@ public class MidiPlayer implements MidiPlayController {
         playState = PlayState.PAUSED;
         if (midiPlayerCallbackList != null) {
             for (MidiPlayerCallback midiPlayerCallback : midiPlayerCallbackList) {
-                midiPlayerCallback.onSheetNeedShadeNotes(-10, (int) currentPulseTime, SheetMusic.DontScroll);
+                midiPlayerCallback.onSheetNeedShadeNotes(-10, (int) currentPulseTime, MusicBook.DontScroll);
                 midiPlayerCallback.onPianoNeedShadeNotes(-10, (int) currentPulseTime);
             }
         }
@@ -596,7 +596,7 @@ public class MidiPlayer implements MidiPlayController {
         }
         if (midiPlayerCallbackList != null) {
             for (MidiPlayerCallback midiPlayerCallback : midiPlayerCallbackList) {
-                midiPlayerCallback.onSheetNeedShadeNotes((int) currentPulseTime, (int) prevPulseTime, SheetMusic.DontScroll);
+                midiPlayerCallback.onSheetNeedShadeNotes((int) currentPulseTime, (int) prevPulseTime, MusicBook.DontScroll);
                 midiPlayerCallback.onPianoNeedShadeNotes((int) currentPulseTime, (int) prevPulseTime);
             }
         }
@@ -615,7 +615,7 @@ public class MidiPlayer implements MidiPlayController {
         if (midiPlayerCallbackList != null) {
             for (MidiPlayerCallback midiPlayerCallback : midiPlayerCallbackList) {
 //                midiPlayerCallback.onPlayerRestartPlayMeasuresInLoop();
-                midiPlayerCallback.onSheetNeedShadeNotes(-10, (int) prevPulseTime, SheetMusic.DontScroll);
+                midiPlayerCallback.onSheetNeedShadeNotes(-10, (int) prevPulseTime, MusicBook.DontScroll);
                 midiPlayerCallback.onPianoNeedShadeNotes(-10, (int) prevPulseTime);
             }
         }

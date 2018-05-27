@@ -72,7 +72,7 @@ public class ChordSymbol implements MusicSymbol {
     /**
      * True if this chord has two stems
      */
-    private SheetMusic sheetmusic;// 用来获取所需颜色和其他设置
+    private MusicBook sheetmusic;// 用来获取所需颜色和其他设置
     /**
      * Used to get colors and other options
      */
@@ -86,7 +86,7 @@ public class ChordSymbol implements MusicSymbol {
      * of the notes. Use the clef when drawing the chord.
      */
     public ChordSymbol(ArrayList<MidiNote> midinotes, KeySignature key,
-                       TimeSignature time, Clef c, SheetMusic sheet) {
+                       TimeSignature time, Clef c, MusicBook sheet) {
 
         int len = midinotes.size();
         int i;
@@ -663,7 +663,7 @@ public class ChordSymbol implements MusicSymbol {
      */
     public int getMinWidth() {
         /* The width needed for the note circles */
-        int result = 2 * SheetMusic.NoteHeight + SheetMusic.NoteHeight * 3 / 4;
+        int result = 2 * MusicBook.NoteHeight + MusicBook.NoteHeight * 3 / 4;
 
         if (accidsymbols.length > 0) {
             result += accidsymbols[0].getMinWidth();
@@ -697,7 +697,7 @@ public class ChordSymbol implements MusicSymbol {
         if (stem2 != null)
             topnote = WhiteNote.Max(topnote, stem2.getEnd());
 
-        int dist = topnote.Dist(WhiteNote.Top(clef)) * SheetMusic.NoteHeight / 2;
+        int dist = topnote.Dist(WhiteNote.Top(clef)) * MusicBook.NoteHeight / 2;
         int result = 0;
         if (dist > 0)
             result = dist;
@@ -728,7 +728,7 @@ public class ChordSymbol implements MusicSymbol {
             bottomnote = WhiteNote.Min(bottomnote, stem2.getEnd());
 
         int dist = WhiteNote.Bottom(clef).Dist(bottomnote) *
-                SheetMusic.NoteHeight / 2;
+                MusicBook.NoteHeight / 2;
 
         int result = 0;
         if (dist > 0)
@@ -912,17 +912,17 @@ public class ChordSymbol implements MusicSymbol {
         for (NoteData note : notedata) {
             /* Get the x,y position to draw the note */
             int ynote = ytop + topstaff.Dist(note.whitenote) *
-                    SheetMusic.NoteHeight / 2;
+                    MusicBook.NoteHeight / 2;
 
-            int xnote = SheetMusic.LineSpace / 4;
+            int xnote = MusicBook.LineSpace / 4;
             if (!note.leftside)
-                xnote += SheetMusic.NoteWidth;
+                xnote += MusicBook.NoteWidth;
 
             /* Draw rotated ellipse.  You must first translate (0,0)
              * to the center of the ellipse.
              */
-            canvas.translate(xnote + SheetMusic.NoteWidth / 2 + 1,
-                    ynote - SheetMusic.LineWidth + SheetMusic.NoteHeight / 2);
+            canvas.translate(xnote + MusicBook.NoteWidth / 2 + 1,
+                    ynote - MusicBook.LineWidth + MusicBook.NoteHeight / 2);
             canvas.rotate(-45);
 
             if (sheetmusic != null) {
@@ -935,24 +935,24 @@ public class ChordSymbol implements MusicSymbol {
                     note.duration == NoteDuration.Half ||
                     note.duration == NoteDuration.DottedHalf) {
 
-                RectF rect = new RectF(-SheetMusic.NoteWidth / 2, -SheetMusic.NoteHeight / 2,
-                        -SheetMusic.NoteWidth / 2 + SheetMusic.NoteWidth,
-                        -SheetMusic.NoteHeight / 2 + SheetMusic.NoteHeight - 1);
+                RectF rect = new RectF(-MusicBook.NoteWidth / 2, -MusicBook.NoteHeight / 2,
+                        -MusicBook.NoteWidth / 2 + MusicBook.NoteWidth,
+                        -MusicBook.NoteHeight / 2 + MusicBook.NoteHeight - 1);
                 canvas.drawOval(rect, paint);
-                rect = new RectF(-SheetMusic.NoteWidth / 2, -SheetMusic.NoteHeight / 2 + 1,
-                        -SheetMusic.NoteWidth / 2 + SheetMusic.NoteWidth,
-                        -SheetMusic.NoteHeight / 2 + 1 + SheetMusic.NoteHeight - 2);
+                rect = new RectF(-MusicBook.NoteWidth / 2, -MusicBook.NoteHeight / 2 + 1,
+                        -MusicBook.NoteWidth / 2 + MusicBook.NoteWidth,
+                        -MusicBook.NoteHeight / 2 + 1 + MusicBook.NoteHeight - 2);
                 canvas.drawOval(rect, paint);
-                rect = new RectF(-SheetMusic.NoteWidth / 2, -SheetMusic.NoteHeight / 2 + 1,
-                        -SheetMusic.NoteWidth / 2 + SheetMusic.NoteWidth,
-                        -SheetMusic.NoteHeight / 2 + 1 + SheetMusic.NoteHeight - 3);
+                rect = new RectF(-MusicBook.NoteWidth / 2, -MusicBook.NoteHeight / 2 + 1,
+                        -MusicBook.NoteWidth / 2 + MusicBook.NoteWidth,
+                        -MusicBook.NoteHeight / 2 + 1 + MusicBook.NoteHeight - 3);
                 canvas.drawOval(rect, paint);
 
             } else {
                 paint.setStyle(Paint.Style.FILL);
-                RectF rect = new RectF(-SheetMusic.NoteWidth / 2, -SheetMusic.NoteHeight / 2,
-                        -SheetMusic.NoteWidth / 2 + SheetMusic.NoteWidth,
-                        -SheetMusic.NoteHeight / 2 + SheetMusic.NoteHeight - 1);
+                RectF rect = new RectF(-MusicBook.NoteWidth / 2, -MusicBook.NoteHeight / 2,
+                        -MusicBook.NoteWidth / 2 + MusicBook.NoteWidth,
+                        -MusicBook.NoteHeight / 2 + MusicBook.NoteHeight - 1);
                 canvas.drawOval(rect, paint);
                 paint.setStyle(Paint.Style.STROKE);
             }
@@ -960,18 +960,18 @@ public class ChordSymbol implements MusicSymbol {
             paint.setColor(Color.BLACK);
 
             canvas.rotate(45);
-            canvas.translate(-(xnote + SheetMusic.NoteWidth / 2 + 1),
-                    -(ynote - SheetMusic.LineWidth + SheetMusic.NoteHeight / 2));
+            canvas.translate(-(xnote + MusicBook.NoteWidth / 2 + 1),
+                    -(ynote - MusicBook.LineWidth + MusicBook.NoteHeight / 2));
 
             /* Draw a dot if this is a dotted duration. */
             if (note.duration == NoteDuration.DottedHalf ||
                     note.duration == NoteDuration.DottedQuarter ||
                     note.duration == NoteDuration.DottedEighth) {
 
-                RectF rect = new RectF(xnote + SheetMusic.NoteWidth + SheetMusic.LineSpace / 3,
-                        ynote + SheetMusic.LineSpace / 3,
-                        xnote + SheetMusic.NoteWidth + SheetMusic.LineSpace / 3 + 4,
-                        ynote + SheetMusic.LineSpace / 3 + 4);
+                RectF rect = new RectF(xnote + MusicBook.NoteWidth + MusicBook.LineSpace / 3,
+                        ynote + MusicBook.LineSpace / 3,
+                        xnote + MusicBook.NoteWidth + MusicBook.LineSpace / 3 + 4,
+                        ynote + MusicBook.LineSpace / 3 + 4);
                 paint.setStyle(Paint.Style.FILL);
                 canvas.drawOval(rect, paint);
                 paint.setStyle(Paint.Style.STROKE);
@@ -980,25 +980,25 @@ public class ChordSymbol implements MusicSymbol {
             /* Draw horizontal lines if note is above/below the staff */
             WhiteNote top = topstaff.Add(1);
             int dist = note.whitenote.Dist(top);
-            int y = ytop - SheetMusic.LineWidth;
+            int y = ytop - MusicBook.LineWidth;
 
             if (dist >= 2) {
                 for (int i = 2; i <= dist; i += 2) {
-                    y -= SheetMusic.NoteHeight;
-                    canvas.drawLine(xnote - SheetMusic.LineSpace / 4, y,
-                            xnote + SheetMusic.NoteWidth + SheetMusic.LineSpace / 4,
+                    y -= MusicBook.NoteHeight;
+                    canvas.drawLine(xnote - MusicBook.LineSpace / 4, y,
+                            xnote + MusicBook.NoteWidth + MusicBook.LineSpace / 4,
                             y, paint);
                 }
             }
 
             WhiteNote bottom = top.Add(-8);
-            y = ytop + (SheetMusic.LineSpace + SheetMusic.LineWidth) * 4 - 1;
+            y = ytop + (MusicBook.LineSpace + MusicBook.LineWidth) * 4 - 1;
             dist = bottom.Dist(note.whitenote);
             if (dist >= 2) {
                 for (int i = 2; i <= dist; i += 2) {
-                    y += SheetMusic.NoteHeight;
-                    canvas.drawLine(xnote - SheetMusic.LineSpace / 4, y,
-                            xnote + SheetMusic.NoteWidth + SheetMusic.LineSpace / 4,
+                    y += MusicBook.NoteHeight;
+                    canvas.drawLine(xnote - MusicBook.LineSpace / 4, y,
+                            xnote + MusicBook.NoteWidth + MusicBook.LineSpace / 4,
                             y, paint);
                 }
             }
@@ -1025,20 +1025,20 @@ public class ChordSymbol implements MusicSymbol {
 
             // Get the x,y position to draw the note
             int ynote = ytop + topstaff.Dist(note.whitenote) *
-                    SheetMusic.NoteHeight / 2;
+                    MusicBook.NoteHeight / 2;
 
             // Draw the letter to the right side of the note
-            int xnote = SheetMusic.NoteWidth + SheetMusic.NoteWidth / 2;
+            int xnote = MusicBook.NoteWidth + MusicBook.NoteWidth / 2;
 
             if (note.duration == NoteDuration.DottedHalf ||
                     note.duration == NoteDuration.DottedQuarter ||
                     note.duration == NoteDuration.DottedEighth || overlap) {
 
-                xnote += SheetMusic.NoteWidth / 2;
+                xnote += MusicBook.NoteWidth / 2;
             }
             canvas.drawText(NoteName(note.number, note.whitenote),
                     xnote,
-                    ynote + SheetMusic.NoteHeight / 2, paint);
+                    ynote + MusicBook.NoteHeight / 2, paint);
         }
     }
 

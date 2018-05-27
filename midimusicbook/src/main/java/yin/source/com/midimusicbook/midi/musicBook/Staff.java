@@ -113,7 +113,7 @@ public class Staff {
     public Staff(Context context, ArrayList<MusicSymbol> symbols, KeySignature key,
                  MidiOptions options, int tracknum, int totaltracks) {
 
-        keysigWidth = SheetMusic.keySignatureWidth(context, key);
+        keysigWidth = MusicBook.keySignatureWidth(context, key);
         this.tracknum = tracknum;
         this.totaltracks = totaltracks;
         showMeasures = (options.showMeasures && tracknum == 0);
@@ -206,19 +206,19 @@ public class Staff {
         above = Math.max(above, clefsym.getAboveStaff());
         below = Math.max(below, clefsym.getBelowStaff());
         if (showMeasures) {
-            above = Math.max(above, SheetMusic.NoteHeight * 3);
+            above = Math.max(above, MusicBook.NoteHeight * 3);
         }
-        ytop = above + SheetMusic.NoteHeight;
-        height = SheetMusic.NoteHeight * 5 + ytop + below;
+        ytop = above + MusicBook.NoteHeight;
+        height = MusicBook.NoteHeight * 5 + ytop + below;
         if (lyrics != null) {
-            height += SheetMusic.NoteHeight * 3 / 2;
+            height += MusicBook.NoteHeight * 3 / 2;
         }
 
         /* Add some extra vertical space between the last track
          * and first track.
          */
         if (tracknum == totaltracks - 1)
-            height += SheetMusic.NoteHeight * 3;
+            height += MusicBook.NoteHeight * 3;
     }
 
     /**
@@ -226,7 +226,7 @@ public class Staff {
      */
     private void CalculateWidth(boolean scrollVert) {
         if (scrollVert) {
-            width = SheetMusic.PageWidth;
+            width = MusicBook.PageWidth;
             return;
         }
         width = keysigWidth;
@@ -262,7 +262,7 @@ public class Staff {
      * Full-Justify the symbols, so that they expand to fill the whole staff.
      */
     private void FullJustify() {
-        if (width != SheetMusic.PageWidth)
+        if (width != MusicBook.PageWidth)
             return;
 
         int totalwidth = keysigWidth;
@@ -280,9 +280,9 @@ public class Staff {
             }
         }
 
-        int extrawidth = (SheetMusic.PageWidth - totalwidth - 1) / totalsymbols;
-        if (extrawidth > SheetMusic.NoteHeight * 2) {
-            extrawidth = SheetMusic.NoteHeight * 2;
+        int extrawidth = (MusicBook.PageWidth - totalwidth - 1) / totalsymbols;
+        if (extrawidth > MusicBook.NoteHeight * 2) {
+            extrawidth = MusicBook.NoteHeight * 2;
         }
         i = 0;
         while (i < symbols.size()) {
@@ -324,7 +324,7 @@ public class Staff {
             lyric.setX(xpos);
             if (symbolindex < symbols.size() &&
                     (symbols.get(symbolindex) instanceof BarSymbol)) {
-                lyric.setX(lyric.getX() + SheetMusic.NoteWidth);
+                lyric.setX(lyric.getX() + MusicBook.NoteWidth);
             }
             lyrics.add(lyric);
         }
@@ -339,7 +339,7 @@ public class Staff {
     private void DrawLyrics(Canvas canvas, Paint paint) {
         /* Skip the left side Clef symbol and key signature */
         int xpos = keysigWidth;
-        int ypos = height - SheetMusic.NoteHeight * 3 / 2;
+        int ypos = height - MusicBook.NoteHeight * 3 / 2;
 
         for (LyricSymbol lyric : lyrics) {
             canvas.drawText(lyric.getText(),
@@ -356,13 +356,13 @@ public class Staff {
     private void DrawMeasureNumbers(Canvas canvas, Paint paint) {
         /* Skip the left side Clef symbol and key signature */
         int xpos = keysigWidth;
-        int ypos = ytop - SheetMusic.NoteHeight * 3;
+        int ypos = ytop - MusicBook.NoteHeight * 3;
 
         for (MusicSymbol s : symbols) {
             if (s instanceof BarSymbol) {
                 int measure = 1 + s.getStartTime() / measureLength;
                 canvas.drawText("" + measure,
-                        xpos + SheetMusic.NoteWidth / 2,
+                        xpos + MusicBook.NoteWidth / 2,
                         ypos,
                         paint);
             }
@@ -376,11 +376,11 @@ public class Staff {
      */
     private void DrawHorizLines(Canvas canvas, Paint paint) {
         int line = 1;
-        int y = ytop - SheetMusic.LineWidth;
+        int y = ytop - MusicBook.LineWidth;
         paint.setStrokeWidth(1);
         for (line = 1; line <= 5; line++) {
-            canvas.drawLine(SheetMusic.LeftMargin, y, width - 1, y, paint);
-            y += SheetMusic.LineWidth + SheetMusic.LineSpace;
+            canvas.drawLine(MusicBook.LeftMargin, y, width - 1, y, paint);
+            y += MusicBook.LineWidth + MusicBook.LineSpace;
         }
 
     }
@@ -400,16 +400,16 @@ public class Staff {
          */
         int ystart, yend;
         if (tracknum == 0)
-            ystart = ytop - SheetMusic.LineWidth;
+            ystart = ytop - MusicBook.LineWidth;
         else
             ystart = 0;
 
         if (tracknum == (totaltracks - 1))
-            yend = ytop + 4 * SheetMusic.NoteHeight;
+            yend = ytop + 4 * MusicBook.NoteHeight;
         else
             yend = height;
 
-        canvas.drawLine(SheetMusic.LeftMargin, ystart, SheetMusic.LeftMargin, yend, paint);
+        canvas.drawLine(MusicBook.LeftMargin, ystart, MusicBook.LeftMargin, yend, paint);
 
         canvas.drawLine(width - 1, ystart, width - 1, yend, paint);
 
@@ -420,7 +420,7 @@ public class Staff {
      */
     public void Draw(Canvas canvas, Rect clip, Paint paint) {
         paint.setColor(Color.BLACK);
-        int xpos = SheetMusic.LeftMargin + 5;
+        int xpos = MusicBook.LeftMargin + 5;
 
         /* Draw the left side Clef symbol */
         canvas.translate(xpos, 0);
@@ -559,14 +559,14 @@ public class Staff {
              */
             if (redrawLines) {
                 int line = 1;
-                int y = ytop - SheetMusic.LineWidth;
+                int y = ytop - MusicBook.LineWidth;
                 paint.setStyle(Paint.Style.STROKE);
                 paint.setColor(Color.BLACK);
                 paint.setStrokeWidth(1);
                 canvas.translate(xpos - 2, 0);
                 for (line = 1; line <= 5; line++) {
                     canvas.drawLine(0, y, curr.getWidth() + 4, y, paint);
-                    y += SheetMusic.LineWidth + SheetMusic.LineSpace;
+                    y += MusicBook.LineWidth + MusicBook.LineSpace;
                 }
                 canvas.translate(-(xpos - 2), 0);
 

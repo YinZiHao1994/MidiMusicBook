@@ -77,9 +77,9 @@ public class ClefSymbol implements MusicSymbol {
      */
     public int getMinWidth() { 
         if (smallsize)
-            return SheetMusic.NoteWidth * 2;
+            return MusicBook.NoteWidth * 2;
         else
-            return SheetMusic.NoteWidth * 3;
+            return MusicBook.NoteWidth * 3;
     } 
 
     /** Get/Set the width (in pixels) of this symbol. The width is set
@@ -95,7 +95,7 @@ public class ClefSymbol implements MusicSymbol {
      */
     public int getAboveStaff() { 
         if (clef == Clef.Treble && !smallsize)
-            return SheetMusic.NoteHeight * 2;
+            return MusicBook.NoteHeight * 2;
         else
             return 0;
     }
@@ -105,9 +105,9 @@ public class ClefSymbol implements MusicSymbol {
      */
     public int getBelowStaff() {
         if (clef == Clef.Treble && !smallsize)
-            return SheetMusic.NoteHeight * 2;
+            return MusicBook.NoteHeight * 2;
         else if (clef == Clef.Treble && smallsize)
-            return SheetMusic.NoteHeight;
+            return MusicBook.NoteHeight;
         else
             return 0;
     }
@@ -128,18 +128,18 @@ public class ClefSymbol implements MusicSymbol {
         if (clef == Clef.Treble) {
             image = treble;
             if (smallsize) {
-                height = SheetMusic.StaffHeight + SheetMusic.StaffHeight/4;
+                height = MusicBook.StaffHeight + MusicBook.StaffHeight/4;
             } else {
-                height = 3 * SheetMusic.StaffHeight/2 + SheetMusic.NoteHeight/2;
-                y = ytop - SheetMusic.NoteHeight;
+                height = 3 * MusicBook.StaffHeight/2 + MusicBook.NoteHeight/2;
+                y = ytop - MusicBook.NoteHeight;
             }
         }
         else {
             image = bass;
             if (smallsize) {
-                height = SheetMusic.StaffHeight - 3*SheetMusic.NoteHeight/2;
+                height = MusicBook.StaffHeight - 3* MusicBook.NoteHeight/2;
             } else {
-                height = SheetMusic.StaffHeight - SheetMusic.NoteHeight;
+                height = MusicBook.StaffHeight - MusicBook.NoteHeight;
             }
         }
 

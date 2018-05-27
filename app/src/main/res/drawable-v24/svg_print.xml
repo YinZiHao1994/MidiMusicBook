@@ -1,0 +1,10 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp"
+    android:height="64dp"
+    android:viewportHeight="1024.0"
+    android:viewportWidth="1024.0">
+
+    <path
+        android:fillColor="#EEEEEE"
+        android:pathData="M909 661h-97v248a50 50 0 0 1-50 50H262a50 50 0 0 1-50-50V661h-97a50 50 0 0 1-50-50V291a50 50 0 0 1 50-50h97V115a50 50 0 0 1 50-50h500a50 50 0 0 1 50 50v126h97a50 50 0 0 1 50 50v320a50 50 0 0 1-50 50zM272 879a20 20 0 0 0 20 20h440a20 20 0 0 0 20-20V559a20 20 0 0 0-20-20H292a20 20 0 0 0-20 20v320z m480-734a20 20 0 0 0-20-20H292a20 20 0 0 0-20 20v96h480v-96z m147 175.99a20 20 0 0 0-20-20H145a20 20 0 0 0-20 20v260a20 20 0 0 0 20 20h67V529a50 50 0 0 1 50-50h500a50 50 0 0 1 50 50v71.99h67a20 20 0 0 0 20-20v-260zM812 423a30 30 0 1 1 30-30 30 30 0 0 1-30 30zM363 629h298a30 30 0 0 1 0 60H363a30 30 0 0 1 0-60z m0 120h298a30 30 0 0 1 0 60H363a30 30 0 0 1 0-60z" />
+</vector>

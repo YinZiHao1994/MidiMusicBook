@@ -78,7 +78,7 @@ public class AccidSymbol implements MusicSymbol {
      * Get the minimum width (in pixels) needed to draw this symbol
      */
     public int getMinWidth() {
-        return 3 * SheetMusic.NoteHeight / 2;
+        return 3 * MusicBook.NoteHeight / 2;
     }
 
     /**
@@ -99,11 +99,11 @@ public class AccidSymbol implements MusicSymbol {
      */
     public int getAboveStaff() {
         int dist = WhiteNote.Top(clef).Dist(whitenote) *
-                SheetMusic.NoteHeight / 2;
+                MusicBook.NoteHeight / 2;
         if (accid == Accid.Sharp || accid == Accid.Natural)
-            dist -= SheetMusic.NoteHeight;
+            dist -= MusicBook.NoteHeight;
         else if (accid == Accid.Flat)
-            dist -= 3 * SheetMusic.NoteHeight / 2;
+            dist -= 3 * MusicBook.NoteHeight / 2;
 
         if (dist < 0)
             return -dist;
@@ -117,10 +117,10 @@ public class AccidSymbol implements MusicSymbol {
      */
     public int getBelowStaff() {
         int dist = WhiteNote.Bottom(clef).Dist(whitenote) *
-                SheetMusic.NoteHeight / 2 +
-                SheetMusic.NoteHeight;
+                MusicBook.NoteHeight / 2 +
+                MusicBook.NoteHeight;
         if (accid == Accid.Sharp || accid == Accid.Natural)
-            dist += SheetMusic.NoteHeight;
+            dist += MusicBook.NoteHeight;
 
         if (dist > 0)
             return dist;
@@ -139,7 +139,7 @@ public class AccidSymbol implements MusicSymbol {
 
         /* Store the y-pixel value of the top of the whitenote in ynote. */
         int ynote = ytop + WhiteNote.Top(clef).Dist(whitenote) *
-                SheetMusic.NoteHeight / 2;
+                MusicBook.NoteHeight / 2;
 
         if (accid == Accid.Sharp)
             DrawSharp(canvas, paint, ynote);
@@ -159,23 +159,23 @@ public class AccidSymbol implements MusicSymbol {
     public void DrawSharp(Canvas canvas, Paint paint, int ynote) {
 
         /* Draw the two vertical lines */
-        int ystart = ynote - SheetMusic.NoteHeight;
-        int yend = ynote + 2 * SheetMusic.NoteHeight;
-        int x = SheetMusic.NoteHeight / 2;
+        int ystart = ynote - MusicBook.NoteHeight;
+        int yend = ynote + 2 * MusicBook.NoteHeight;
+        int x = MusicBook.NoteHeight / 2;
         paint.setStrokeWidth(1);
         canvas.drawLine(x, ystart + 2, x, yend, paint);
-        x += SheetMusic.NoteHeight / 2;
+        x += MusicBook.NoteHeight / 2;
         canvas.drawLine(x, ystart, x, yend - 2, paint);
 
         /* Draw the slightly upwards horizontal lines */
-        int xstart = SheetMusic.NoteHeight / 2 - SheetMusic.NoteHeight / 4;
-        int xend = SheetMusic.NoteHeight + SheetMusic.NoteHeight / 4;
-        ystart = ynote + SheetMusic.LineWidth;
-        yend = ystart - SheetMusic.LineWidth - SheetMusic.LineSpace / 4;
-        paint.setStrokeWidth(SheetMusic.LineSpace / 2);
+        int xstart = MusicBook.NoteHeight / 2 - MusicBook.NoteHeight / 4;
+        int xend = MusicBook.NoteHeight + MusicBook.NoteHeight / 4;
+        ystart = ynote + MusicBook.LineWidth;
+        yend = ystart - MusicBook.LineWidth - MusicBook.LineSpace / 4;
+        paint.setStrokeWidth(MusicBook.LineSpace / 2);
         canvas.drawLine(xstart, ystart, xend, yend, paint);
-        ystart += SheetMusic.LineSpace;
-        yend += SheetMusic.LineSpace;
+        ystart += MusicBook.LineSpace;
+        yend += MusicBook.LineSpace;
         canvas.drawLine(xstart, ystart, xend, yend, paint);
         paint.setStrokeWidth(1);
     }
@@ -186,12 +186,12 @@ public class AccidSymbol implements MusicSymbol {
      * @param ynote The pixel location of the top of the accidental's note.
      */
     public void DrawFlat(Canvas canvas, Paint paint, int ynote) {
-        int x = SheetMusic.LineSpace / 4;
+        int x = MusicBook.LineSpace / 4;
 
         /* Draw the vertical line */
         paint.setStrokeWidth(1);
-        canvas.drawLine(x, ynote - SheetMusic.NoteHeight - SheetMusic.NoteHeight / 2,
-                x, ynote + SheetMusic.NoteHeight, paint);
+        canvas.drawLine(x, ynote - MusicBook.NoteHeight - MusicBook.NoteHeight / 2,
+                x, ynote + MusicBook.NoteHeight, paint);
 
         /* Draw 3 bezier curves.
          * All 3 curves start and stop at the same points.
@@ -200,26 +200,26 @@ public class AccidSymbol implements MusicSymbol {
          * towards the top-right.
          */
         Path bezierPath = new Path();
-        bezierPath.moveTo(x, ynote + SheetMusic.LineSpace / 4);
-        bezierPath.cubicTo(x + SheetMusic.LineSpace / 2, ynote - SheetMusic.LineSpace / 2,
-                x + SheetMusic.LineSpace, ynote + SheetMusic.LineSpace / 3,
-                x, ynote + SheetMusic.LineSpace + SheetMusic.LineWidth + 1);
+        bezierPath.moveTo(x, ynote + MusicBook.LineSpace / 4);
+        bezierPath.cubicTo(x + MusicBook.LineSpace / 2, ynote - MusicBook.LineSpace / 2,
+                x + MusicBook.LineSpace, ynote + MusicBook.LineSpace / 3,
+                x, ynote + MusicBook.LineSpace + MusicBook.LineWidth + 1);
         canvas.drawPath(bezierPath, paint);
 
         bezierPath = new Path();
-        bezierPath.moveTo(x, ynote + SheetMusic.LineSpace / 4);
-        bezierPath.cubicTo(x + SheetMusic.LineSpace / 2, ynote - SheetMusic.LineSpace / 2,
-                x + SheetMusic.LineSpace + SheetMusic.LineSpace / 4,
-                ynote + SheetMusic.LineSpace / 3 - SheetMusic.LineSpace / 4,
-                x, ynote + SheetMusic.LineSpace + SheetMusic.LineWidth + 1);
+        bezierPath.moveTo(x, ynote + MusicBook.LineSpace / 4);
+        bezierPath.cubicTo(x + MusicBook.LineSpace / 2, ynote - MusicBook.LineSpace / 2,
+                x + MusicBook.LineSpace + MusicBook.LineSpace / 4,
+                ynote + MusicBook.LineSpace / 3 - MusicBook.LineSpace / 4,
+                x, ynote + MusicBook.LineSpace + MusicBook.LineWidth + 1);
         canvas.drawPath(bezierPath, paint);
 
         bezierPath = new Path();
-        bezierPath.moveTo(x, ynote + SheetMusic.LineSpace / 4);
-        bezierPath.cubicTo(x + SheetMusic.LineSpace / 2, ynote - SheetMusic.LineSpace / 2,
-                x + SheetMusic.LineSpace + SheetMusic.LineSpace / 2,
-                ynote + SheetMusic.LineSpace / 3 - SheetMusic.LineSpace / 2,
-                x, ynote + SheetMusic.LineSpace + SheetMusic.LineWidth + 1);
+        bezierPath.moveTo(x, ynote + MusicBook.LineSpace / 4);
+        bezierPath.cubicTo(x + MusicBook.LineSpace / 2, ynote - MusicBook.LineSpace / 2,
+                x + MusicBook.LineSpace + MusicBook.LineSpace / 2,
+                ynote + MusicBook.LineSpace / 3 - MusicBook.LineSpace / 2,
+                x, ynote + MusicBook.LineSpace + MusicBook.LineWidth + 1);
         canvas.drawPath(bezierPath, paint);
 
     }
@@ -232,26 +232,26 @@ public class AccidSymbol implements MusicSymbol {
     public void DrawNatural(Canvas canvas, Paint paint, int ynote) {
 
         /* Draw the two vertical lines */
-        int ystart = ynote - SheetMusic.LineSpace - SheetMusic.LineWidth;
-        int yend = ynote + SheetMusic.LineSpace + SheetMusic.LineWidth;
-        int x = SheetMusic.LineSpace / 2;
+        int ystart = ynote - MusicBook.LineSpace - MusicBook.LineWidth;
+        int yend = ynote + MusicBook.LineSpace + MusicBook.LineWidth;
+        int x = MusicBook.LineSpace / 2;
         paint.setStrokeWidth(1);
         canvas.drawLine(x, ystart, x, yend, paint);
-        x += SheetMusic.LineSpace - SheetMusic.LineSpace / 4;
-        ystart = ynote - SheetMusic.LineSpace / 4;
-        yend = ynote + 2 * SheetMusic.LineSpace + SheetMusic.LineWidth -
-                SheetMusic.LineSpace / 4;
+        x += MusicBook.LineSpace - MusicBook.LineSpace / 4;
+        ystart = ynote - MusicBook.LineSpace / 4;
+        yend = ynote + 2 * MusicBook.LineSpace + MusicBook.LineWidth -
+                MusicBook.LineSpace / 4;
         canvas.drawLine(x, ystart, x, yend, paint);
 
         /* Draw the slightly upwards horizontal lines */
-        int xstart = SheetMusic.LineSpace / 2;
-        int xend = xstart + SheetMusic.LineSpace - SheetMusic.LineSpace / 4;
-        ystart = ynote + SheetMusic.LineWidth;
-        yend = ystart - SheetMusic.LineWidth - SheetMusic.LineSpace / 4;
-        paint.setStrokeWidth(SheetMusic.LineSpace / 2);
+        int xstart = MusicBook.LineSpace / 2;
+        int xend = xstart + MusicBook.LineSpace - MusicBook.LineSpace / 4;
+        ystart = ynote + MusicBook.LineWidth;
+        yend = ystart - MusicBook.LineWidth - MusicBook.LineSpace / 4;
+        paint.setStrokeWidth(MusicBook.LineSpace / 2);
         canvas.drawLine(xstart, ystart, xend, yend, paint);
-        ystart += SheetMusic.LineSpace;
-        yend += SheetMusic.LineSpace;
+        ystart += MusicBook.LineSpace;
+        yend += MusicBook.LineSpace;
         canvas.drawLine(xstart, ystart, xend, yend, paint);
         paint.setStrokeWidth(1);
     }

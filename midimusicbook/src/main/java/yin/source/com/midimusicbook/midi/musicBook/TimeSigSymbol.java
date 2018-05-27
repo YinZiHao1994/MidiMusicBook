@@ -101,7 +101,7 @@ public class TimeSigSymbol implements MusicSymbol {
      */
     public int getMinWidth() {
         if (candraw)
-            return images[2].getWidth() * SheetMusic.NoteHeight * 2 / images[2].getHeight();
+            return images[2].getWidth() * MusicBook.NoteHeight * 2 / images[2].getHeight();
         else
             return 0;
     }
@@ -149,14 +149,14 @@ public class TimeSigSymbol implements MusicSymbol {
         Bitmap denom = images[denominator];
 
         /* Scale the image width to match the height */ // 缩放图片的宽度使其匹配音符高度
-        int imgheight = SheetMusic.NoteHeight * 2;
+        int imgheight = MusicBook.NoteHeight * 2;
         int imgwidth = numer.getWidth() * imgheight / numer.getHeight();
         Rect src = new Rect(0, 0, numer.getWidth(), numer.getHeight());
         Rect dest = new Rect(0, ytop, imgwidth, ytop + imgheight);
         canvas.drawBitmap(numer, src, dest, paint);
 
         src = new Rect(0, 0, denom.getWidth(), denom.getHeight());
-        dest = new Rect(0, ytop + SheetMusic.NoteHeight * 2, imgwidth, ytop + SheetMusic.NoteHeight * 2 + imgheight);
+        dest = new Rect(0, ytop + MusicBook.NoteHeight * 2, imgwidth, ytop + MusicBook.NoteHeight * 2 + imgheight);
         canvas.drawBitmap(denom, src, dest, paint);
         canvas.translate(-(getWidth() - getMinWidth()), 0);
     }

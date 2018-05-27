@@ -12,6 +12,7 @@
 package yin.source.com.midimusicbook.midi.musicBook;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -19,11 +20,17 @@ import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.net.Uri;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
@@ -62,7 +69,7 @@ class BoxedInt {
  * Shade all the notes played at a given pulse time.
  * 阴影所有的在给定的时间播放的所有音符
  */
-public class SheetMusic extends SurfaceView implements SurfaceHolder.Callback, ScrollAnimationListener, MidiPlayer.MidiPlayerCallback {
+public class MusicBook extends SurfaceView implements SurfaceHolder.Callback, ScrollAnimationListener, MidiPlayer.MidiPlayerCallback {
 
     /* Measurements used when drawing.  All measurements are in pixels. */
     public static final int LineWidth = 1;// 线的宽度
@@ -91,11 +98,11 @@ public class SheetMusic extends SurfaceView implements SurfaceHolder.Callback, S
      * The width of a whole note
      */
 
-    public static final int PageWidth = 800;// 每一页的宽度
+    public static final int PageWidth = 1080;// 每一页的宽度
     /**
      * The width of each page
      */
-    public static final int PageHeight = 1050;// 每一页的高度(正在印刷的时候)
+    public static final int PageHeight = 1920;// 每一页的高度(正在印刷的时候)
     /**
      * The height of each page (when printing)
      */
@@ -214,17 +221,17 @@ public class SheetMusic extends SurfaceView implements SurfaceHolder.Callback, S
 
     private Context context;
     private MidiOptions midiOptions;
+    private MidiFile midiFile;
 
-
-    public SheetMusic(Context context) {
+    public MusicBook(Context context) {
         this(context, null);
     }
 
-    public SheetMusic(Context context, AttributeSet attrs) {
+    public MusicBook(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public SheetMusic(Context context, AttributeSet attrs, int defStyleAttr) {
+    public MusicBook(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         this.context = context;
         SurfaceHolder holder = getHolder();
@@ -362,7 +369,7 @@ public class SheetMusic extends SurfaceView implements SurfaceHolder.Callback, S
         for (AccidSymbol symbol : keys) {
             result += symbol.getMinWidth();
         }
-        return result + SheetMusic.LeftMargin + 5;
+        return result + MusicBook.LeftMargin + 5;
     }
 
     /**
@@ -419,6 +426,7 @@ public class SheetMusic extends SurfaceView implements SurfaceHolder.Callback, S
      */
     public void init(MidiFile file, MidiOptions options) {
         midiOptions = options;
+        midiFile = file;
         if (options == null) {
             options = new MidiOptions(file);
         }
@@ -823,7 +831,7 @@ public class SheetMusic extends SurfaceView implements SurfaceHolder.Callback, S
             int maxwidth;
             /* If we're scrolling vertically, the maximum width is PageWidth. */
             if (midiOptions.scrollVert) {
-                maxwidth = SheetMusic.PageWidth;
+                maxwidth = MusicBook.PageWidth;
             } else {
                 maxwidth = 2000000;
             }
@@ -859,7 +867,7 @@ public class SheetMusic extends SurfaceView implements SurfaceHolder.Callback, S
                 }
             }
             if (midiOptions.scrollVert) {
-                width = SheetMusic.PageWidth;
+                width = MusicBook.PageWidth;
             }
             // int range = endindex + 1 - startindex;
             ArrayList<MusicSymbol> staffSymbols = new ArrayList<MusicSymbol>();
@@ -1037,7 +1045,7 @@ public class SheetMusic extends SurfaceView implements SurfaceHolder.Callback, S
 
         //todo 去除条件后，保证每一次调用此方法都会重新绘制整个画面，使改变一些参数后能使画面配套生效。不确定无脑去除原条件后对性能会有什么影响暂时这么处理
 //        if (!isScrollPositionInBuffer()) {
-            drawToBuffer(scrollX, scrollY);
+        drawToBuffer(scrollX, scrollY);
 //        }
         // We want (scrollX - bufferX, scrollY - bufferY)
         // to be (0,0) on the canvas
@@ -1111,14 +1119,19 @@ public class SheetMusic extends SurfaceView implements SurfaceHolder.Callback, S
     /**
      * Write the MIDI filename at the top of the page
      */
-    private void DrawTitle(Canvas canvas) {
-        int leftmargin = 20;
-        int topmargin = 20;
+    private void drawTitle(Canvas canvas) {
+        int leftMargin = 20;
+        int topMargin = 20;
         String title = filename;
         title = title.replace(".mid", "").replace("_", " ");
-        canvas.translate(leftmargin, topmargin);
-        canvas.drawText(title, 0, 0, paint);
-        canvas.translate(-leftmargin, -topmargin);
+        canvas.translate(leftMargin, topMargin);
+        Paint titlePaint = new Paint();
+        titlePaint.setStyle(Paint.Style.FILL);
+        titlePaint.setAntiAlias(true);
+        titlePaint.setColor(Color.BLACK);
+        titlePaint.setTextSize(paint.getTextSize() * 4);
+        canvas.drawText(title, 0, titlePaint.getTextSize(), titlePaint);
+        canvas.translate(-leftMargin, titlePaint.getTextSize());
     }
 
     /**
@@ -1127,7 +1140,7 @@ public class SheetMusic extends SurfaceView implements SurfaceHolder.Callback, S
      * If the sheet music has exactly 2 tracks, then two staffs should
      * fit within a single page, and not be split across two pages.
      */
-    public int GetTotalPages() {
+    public int getTotalPages() {
         int num = 1;
         int currheight = TitleHeight;
         if (numtracks == 2 && (staffs.size() % 2) == 0) {
@@ -1160,7 +1173,7 @@ public class SheetMusic extends SurfaceView implements SurfaceHolder.Callback, S
      * If the sheet music has exactly 2 tracks, then two staffs should
      * fit within a single page, and not be split across two pages.
      */
-    public void DrawPage(Canvas canvas, int pagenumber) {
+    public void drawPage(Canvas canvas, int pagenumber) {
         int leftmargin = 20;
         int topmargin = 20;
         //int rightmargin = 20;
@@ -1191,7 +1204,7 @@ public class SheetMusic extends SurfaceView implements SurfaceHolder.Callback, S
             }
             /* Print the staffs until the height reaches PageHeight */
             if (pagenum == 1) {
-                DrawTitle(canvas);
+                drawTitle(canvas);
                 ypos = TitleHeight;
             } else {
                 ypos = 0;
@@ -1224,7 +1237,7 @@ public class SheetMusic extends SurfaceView implements SurfaceHolder.Callback, S
             }
             /* Print the staffs until the height reaches viewPageHeight */
             if (pagenum == 1) {
-                DrawTitle(canvas);
+                drawTitle(canvas);
                 ypos = TitleHeight;
             } else {
                 ypos = 0;
@@ -1491,6 +1504,61 @@ public class SheetMusic extends SurfaceView implements SurfaceHolder.Callback, S
     }
 
 
+    public void saveMusicBookAsImages(SaveMusicBookAsImagesCallback saveMusicBookAsImagesCallback) {
+
+        File parent = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+        if (!parent.exists()) {
+            //如果系统自带 download 目录存在，下载到此目录。如果不存在，下载到当前 app 自己的目录
+            parent = context.getExternalFilesDir(null);
+        }
+        saveMusicBookAsImages(parent, saveMusicBookAsImagesCallback);
+
+
+    }
+
+    public void saveMusicBookAsImages(File parentFolder, SaveMusicBookAsImagesCallback saveMusicBookAsImagesCallback) {
+        String filename = midiFile.getFileName();
+
+        if (!midiOptions.scrollVert) {
+            midiOptions.scrollVert = true;
+            init(midiFile, midiOptions);
+            setPlayer(player);
+            callOnDraw();
+        }
+        try {
+            int numPages = getTotalPages();
+            for (int page = 1; page <= numPages; page++) {
+                Bitmap image = Bitmap.createBitmap(MusicBook.PageWidth + 40,
+                        MusicBook.PageHeight + 40, Bitmap.Config.ARGB_8888);
+                Canvas imageCanvas = new Canvas(image);
+                drawPage(imageCanvas, page);
+                File file = new File(parentFolder, filename + "_" + page + ".png");
+                parentFolder.mkdirs();
+                OutputStream stream = new FileOutputStream(file);
+                image.compress(Bitmap.CompressFormat.PNG, 0, stream);
+                image = null;
+                stream.close();
+
+                // 其次把文件插入到系统图库
+                MediaStore.Images.Media.insertImage(context.getContentResolver(), file.getAbsolutePath(), file.getName(), null);
+// 最后通知图库更新
+                context.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(file)));
+                if (saveMusicBookAsImagesCallback != null) {
+                    saveMusicBookAsImagesCallback.onSuccess();
+                }
+            }
+        } catch (Exception e) {
+            if (saveMusicBookAsImagesCallback != null) {
+                saveMusicBookAsImagesCallback.onFail(e.getLocalizedMessage());
+            }
+        }
+    }
+
+    @Override
+    public void onSheetNeedShadeNotes(int currentPulseTime, int prevPulseTime, int gradualScroll) {
+        ShadeNotes(currentPulseTime, prevPulseTime, gradualScroll);
+    }
+
 //    @Override
 //    public void onPlayerStop() {
 //        ShadeNotes(-10, (int) player.getPrevPulseTime(), SheetMusic.DontScroll);
@@ -1545,13 +1613,14 @@ public class SheetMusic extends SurfaceView implements SurfaceHolder.Callback, S
 //    }
 
     @Override
-    public void onSheetNeedShadeNotes(int currentPulseTime, int prevPulseTime, int gradualScroll) {
-        ShadeNotes(currentPulseTime, prevPulseTime, gradualScroll);
-    }
-
-    @Override
     public void onPianoNeedShadeNotes(int currentPulseTime, int prevPulseTime) {
 
+    }
+
+    public interface SaveMusicBookAsImagesCallback {
+        void onSuccess();
+
+        void onFail(String text);
     }
 }
 

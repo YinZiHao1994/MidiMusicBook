@@ -52,7 +52,7 @@ public class BarSymbol implements MusicSymbol {
      * 获取需要绘制的符号的最小宽度(像素为单位)
      */
     public int getMinWidth() {
-        return 2 * SheetMusic.LineSpace;
+        return 2 * MusicBook.LineSpace;
     }
 
     /**
@@ -92,9 +92,9 @@ public class BarSymbol implements MusicSymbol {
      */
     public void Draw(Canvas canvas, Paint paint, int ytop) {
         int y = ytop;
-        int yend = y + SheetMusic.LineSpace * 4 + SheetMusic.LineWidth * 4;
+        int yend = y + MusicBook.LineSpace * 4 + MusicBook.LineWidth * 4;
         paint.setStrokeWidth(1);
-        canvas.drawLine(SheetMusic.NoteWidth / 2, y, SheetMusic.NoteWidth / 2, yend, paint);
+        canvas.drawLine(MusicBook.NoteWidth / 2, y, MusicBook.NoteWidth / 2, yend, paint);
 
     }
 

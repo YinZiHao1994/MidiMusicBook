@@ -8,7 +8,9 @@ import android.graphics.Canvas;
 import android.media.MediaScannerConnection;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -18,6 +20,9 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.source.yin.yinandroidutils.PermissionManager;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -30,7 +35,7 @@ import yin.source.com.midimusicbook.midi.baseBean.MidiFile;
 import yin.source.com.midimusicbook.midi.baseBean.MidiOptions;
 import yin.source.com.midimusicbook.midi.musicBook.MidiPlayer;
 import yin.source.com.midimusicbook.midi.musicBook.Piano;
-import yin.source.com.midimusicbook.midi.musicBook.SheetMusic;
+import yin.source.com.midimusicbook.midi.musicBook.MusicBook;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -42,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
 
     private MidiPlayer player; /* The play/stop/rewind toolbar */
     private Piano piano; /* The piano at the top */ // 顶部的钢琴
-    private SheetMusic sheet; /* The sheet music */ // 乐谱
+    private MusicBook sheet; /* The sheet music */ // 乐谱
     private MidiFile midifile; /* The midi file to play */ // 需要播放的midi文件
     private MidiOptions options; /* The options for sheet music and sound */ // 乐谱和声音的选项
 
@@ -76,6 +81,9 @@ public class MainActivity extends AppCompatActivity {
     private Button btnPause;
 
     private Button btnRestart;
+    private Button btnPrint;
+
+    private PermissionManager permissionManager;
 
     /**
      * Create this SheetMusicActivity. The Intent should have two parameters: -
@@ -93,8 +101,14 @@ public class MainActivity extends AppCompatActivity {
 //        player = (MidiPlayer) findViewById(R.id.midi_player);
         player = new MidiPlayer(getApplicationContext());
         piano = (Piano) findViewById(R.id.piano);
-        sheet = (SheetMusic) findViewById(R.id.sheet);
-
+        sheet = (MusicBook) findViewById(R.id.sheet);
+        btnPrint = findViewById(R.id.btn_print);
+        btnPrint.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                print();
+            }
+        });
 
 //        File fileFromAssets = FileManagerUtils.getFileFromAssets("piano_guide.mid", this);
         File fileFromAssets = FileManagerUtils.getFileFromAssets("Pachelbel__Canon_in_D_major.mid", this);
@@ -108,6 +122,38 @@ public class MainActivity extends AppCompatActivity {
         //显示音名
         options.showNoteLetters = 0;
         createSheetMusic(options);
+    }
+
+    private void print() {
+        permissionManager = new PermissionManager(this, new PermissionManager.PermissionResultCallBack() {
+            @Override
+            public void onPermissionGranted(String permission) {
+                sheet.saveMusicBookAsImages(new MusicBook.SaveMusicBookAsImagesCallback() {
+                    @Override
+                    public void onSuccess() {
+                        Toast.makeText(getApplicationContext(), "save success", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onFail(String text) {
+                        Toast.makeText(getApplicationContext(), "save fail " + text, Toast.LENGTH_SHORT).show();
+                        Log.d("yzh", "save fail " + text);
+                    }
+                });
+            }
+
+            @Override
+            public void onPermissionDenied(String permission) {
+
+            }
+
+            @Override
+            public void shouldShowRequestPermissionRationale(String permission) {
+
+            }
+        });
+        permissionManager.writeExternalStorage();
+
     }
 
     private void createPlayerButton() {
@@ -296,15 +342,14 @@ public class MainActivity extends AppCompatActivity {
             createSheetMusic(options);
         }
         try {
-            int numpages = sheet.GetTotalPages();
+            int numpages = sheet.getTotalPages();
             for (int page = 1; page <= numpages; page++) {
-                Bitmap image = Bitmap.createBitmap(SheetMusic.PageWidth + 40,
-                        SheetMusic.PageHeight + 40, Bitmap.Config.ARGB_8888);
+                Bitmap image = Bitmap.createBitmap(MusicBook.PageWidth + 40,
+                        MusicBook.PageHeight + 40, Bitmap.Config.ARGB_8888);
                 Canvas imageCanvas = new Canvas(image);
-                sheet.DrawPage(imageCanvas, page);
-                File path = Environment
-                        .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES
-                                + "/MidiSheetMusic");
+                sheet.drawPage(imageCanvas, page);
+                File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES
+                        + "/MidiSheetMusic");
                 File file = new File(path, "" + filename + page + ".png");
                 path.mkdirs();
                 OutputStream stream = new FileOutputStream(file);
@@ -372,6 +417,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (permissionManager != null) {
+            permissionManager.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
     }
 
     /**
