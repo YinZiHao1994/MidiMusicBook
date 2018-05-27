@@ -3,14 +3,12 @@ package yin.source.com.midimusicbooksample;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.media.MediaScannerConnection;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -106,6 +104,9 @@ public class MainActivity extends AppCompatActivity {
         // If previous settings have been saved, used those
         options = new MidiOptions(midifile);
         options.scrollVert = true;
+        options.showMeasures = true;
+        //显示音名
+        options.showNoteLetters = 0;
         createSheetMusic(options);
     }
 
@@ -117,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
         fastFwdButton = (Button) findViewById(R.id.btn_fast_forward);
         settingsButton = (Button) findViewById(R.id.btn_setting);
         rewindButton = (Button) findViewById(R.id.btn_rewind);
-        speedBar = (SeekBar) findViewById(R.id.seek_speed);
+//        speedBar = (SeekBar) findViewById(R.id.seek_speed);
         speedText = (TextView) findViewById(R.id.tv_speed);
         btnPause = findViewById(R.id.btn_pause);
         btnRestart = findViewById(R.id.btn_restart);
@@ -144,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
         });
         settingsButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                openOptionsMenu();
+                showSettingDialog();
             }
         });
         btnPause.setOnClickListener(new View.OnClickListener() {
@@ -161,21 +162,34 @@ public class MainActivity extends AppCompatActivity {
                 player.play();
             }
         });
-        speedBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            public void onProgressChanged(SeekBar bar, int progress,
-                                          boolean fromUser) {
-                speedText.setText("Speed: " + String.format("%03d", progress) + "%");
-            }
+//        speedBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+//            public void onProgressChanged(SeekBar bar, int progress,
+//                                          boolean fromUser) {
+//                speedText.setText("Speed: " + String.format("%03d", progress) + "%");
+//            }
+//
+//            public void onStartTrackingTouch(SeekBar bar) {
+//            }
+//
+//            public void onStopTrackingTouch(SeekBar bar) {
+//            }
+//        });
 
-            public void onStartTrackingTouch(SeekBar bar) {
-            }
+    }
 
-            public void onStopTrackingTouch(SeekBar bar) {
+    private void showSettingDialog() {
+        SettingDialog settingDialog = SettingDialog.newInstance(getApplicationContext(), options);
+        settingDialog.show(getSupportFragmentManager(), SettingDialog.class.getSimpleName());
+        settingDialog.setSettingCallback(new SettingDialog.SettingCallback() {
+            @Override
+            public void onSettingFinish(MidiOptions midiOptions) {
+                if (midiOptions != null) {
+                    createSheetMusic(midiOptions);
+                }
             }
         });
 
     }
-
 
     /**
      * Create the SheetMusic view with the given options
@@ -188,9 +202,9 @@ public class MainActivity extends AppCompatActivity {
         }
         sheet.init(midifile, options);
         sheet.setPlayer(player);
-        piano.SetMidiFile(midifile, options, player);
-        piano.SetShadeColors( options.colorLeftHandShade,options.colorRightHandShade);
-        player.SetMidiFile(midifile, options);
+        piano.setMidiFile(midifile, options, player);
+        piano.setShadeColors(options.colorLeftHandShade, options.colorRightHandShade);
+        player.setMidiFile(midifile, options);
         sheet.callOnDraw();
     }
 
@@ -347,31 +361,7 @@ public class MainActivity extends AppCompatActivity {
      * with the new options.
      */
     @Override
-    protected void onActivityResult(int requestCode, int resultCode,
-                                    Intent intent) {
-        if (D) Log.d(TAG, "onActivityResult " + resultCode);
-
-        if (requestCode != settingsRequestCode) {
-            return;
-        }
-        options = (MidiOptions) intent
-                .getSerializableExtra(SettingsActivity.settingsID);
-
-        // Check whether the default instruments have changed.
-        for (int i = 0; i < options.instruments.length; i++) {
-            if (options.instruments[i] != midifile.getTracks().get(i)
-                    .getInstrument()) {
-                options.useDefaultInstruments = false;
-            }
-        }
-        // Save the options.
-        SharedPreferences.Editor editor = getPreferences(0).edit();
-        editor.putBoolean("scrollVert", options.scrollVert);
-        editor.putInt("colorRightHandShade", options.colorRightHandShade);
-        editor.putInt("colorLeftHandShade", options.colorLeftHandShade);
-        editor.putBoolean("showPiano", options.showPiano);
-        editor.apply();
-
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         // Recreate the sheet music with the new options
         createSheetMusic(options);
     }

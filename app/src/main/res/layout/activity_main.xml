@@ -45,12 +45,12 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
-        <SeekBar
-            android:id="@+id/seek_speed"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:max="150"
-            android:progress="100" />
+        <!--<SeekBar-->
+            <!--android:id="@+id/seek_speed"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:max="150"-->
+            <!--android:progress="100" />-->
 
         <Button
             android:id="@+id/btn_setting"
@@ -64,6 +64,7 @@
         android:layout_height="wrap_content" />
 
     <yin.source.com.midimusicbook.midi.musicBook.SheetMusic
+        android:layout_margin="5dp"
         android:id="@+id/sheet"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

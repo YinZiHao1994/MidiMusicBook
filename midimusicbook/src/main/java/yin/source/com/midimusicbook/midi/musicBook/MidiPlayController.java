@@ -18,6 +18,6 @@ public interface MidiPlayController {
 
     void pause();
 
-    void SetMidiFile(MidiFile file, MidiOptions opt);
+    void setMidiFile(MidiFile file, MidiOptions opt);
 
 }

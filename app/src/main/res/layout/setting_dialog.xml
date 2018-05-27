@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="10dp"
+    android:orientation="vertical">
+
+    <CheckBox
+        android:id="@+id/check_show_bar_number"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:checked="true"
+        android:text="显示小节数" />
+
+    <CheckBox
+        android:id="@+id/check_show_note_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="显示音名" />
+
+    <TextView
+        android:id="@+id/positive"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right"
+        android:layout_marginTop="10dp"
+        android:text="确定" />
+</LinearLayout>

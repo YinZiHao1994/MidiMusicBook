@@ -113,7 +113,7 @@ public class Staff {
     public Staff(Context context, ArrayList<MusicSymbol> symbols, KeySignature key,
                  MidiOptions options, int tracknum, int totaltracks) {
 
-        keysigWidth = SheetMusic.KeySignatureWidth(context, key);
+        keysigWidth = SheetMusic.keySignatureWidth(context, key);
         this.tracknum = tracknum;
         this.totaltracks = totaltracks;
         showMeasures = (options.showMeasures && tracknum == 0);

@@ -271,7 +271,7 @@ public class MidiPlayer implements MidiPlayController {
      * The MidiFile and/or SheetMusic has changed. stop any playback sound, and
      * store the current midifile and sheet music.
      */
-    public void SetMidiFile(MidiFile file, MidiOptions opt) {
+    public void setMidiFile(MidiFile file, MidiOptions opt) {
 
         /*
          * If we're paused, and using the same midi file, redraw the highlighted

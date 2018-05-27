@@ -64,7 +64,7 @@ public class MidiOptions implements Serializable {
     public boolean showMeasures;
     /**
      * Show the measure numbers for each staff
-     */ // 显示每条五线谱的拍子(小节、旋律)
+     */ // 显示小节数
     public int shifttime;
     /**
      * Shift note starttimes by the given amount

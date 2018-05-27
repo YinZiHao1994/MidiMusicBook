@@ -40,7 +40,7 @@ import yin.source.com.midimusicbook.midi.baseBean.MidiTrack;
  * piano, and highlights the piano notes during playback.
  * The main methods are:
  * <p/>
- * SetMidiFile() - Set the Midi file to use for shading.  The Midi file
+ * setMidiFile() - Set the Midi file to use for shading.  The Midi file
  * is needed to determine which notes to shade.
  * <p/>
  * ShadeNotes() - Shade notes on the piano that occur at a given pulse time.
@@ -204,7 +204,7 @@ public class Piano extends SurfaceView implements SurfaceHolder.Callback, MidiPl
      * and StartTime (in pulses), so we know which notes to shade given the
      * current pulse time.
      */
-    public void SetMidiFile(MidiFile midifile, MidiOptions options, MidiPlayer player) {
+    public void setMidiFile(MidiFile midifile, MidiOptions options, MidiPlayer player) {
         if (midifile == null) {
             notes = null;
             useTwoColors = false;
@@ -244,7 +244,7 @@ public class Piano extends SurfaceView implements SurfaceHolder.Callback, MidiPl
     /**
      * Set the colors to use for shading
      */
-    public void SetShadeColors(int c1, int c2) {
+    public void setShadeColors(int c1, int c2) {
         colorLeftHandShade = c1;
         colorRightHandShade = c2;
     }
